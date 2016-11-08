@@ -3,10 +3,14 @@
   <div class="container" >
     <h3 id="myMessage"> Khan Academy Coding Challenge</h3> 
 
-    <div id="">
 
       <input type="submit" id="view_database" value="View Database" onclick="">
-
+     <p> Total Number of Users: <span id="total_num_users"></span> </p>
+     <p> Number of distinct versions: <span id="num_of_distinct_versions"></span></p>
+     <p> List of versions: <span id="list_of_versions"></span></p>
+     <p> Users per version: <span id="users_per_version"></span></p>
+     <p> Ten random users: <span id="ten_random_users"></span></p>
+      <br>
 
       <form action="">
         Number of entries to generate:
@@ -14,12 +18,17 @@
         <input type="submit" id="populate_database" value="Populate Database" onclick="">
       </form>
       
-      <div id="count_result"></div>
-      <div id="user_result"></div>
-
 
       <p id="wait">wait</p>
-    </div>
+
+      <br>
+      <form action="">
+        Version number to infect:
+        <input type="text" id="infection_version" value="1.1"><br>
+        <input type="submit" id="total_infection" value="Perofrm Total Infection" onclick="">
+      </form>
+
+
   </div>
 
 {% endblock %}

@@ -53,7 +53,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="{{ url_for('home') }}">VideoSceneSearch</a>
+          <a class="navbar-brand" href="{{ url_for('home') }}">Khan Academy Coding Challenge</a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
@@ -83,13 +83,19 @@
 
     <script>
 
+    function displayInfo(version_info) {
+        $("#total_num_users").text(version_info.total_num_users);
+        $("#num_of_distinct_versions").text(version_info.num_of_distinct_versions);
+        $("#list_of_versions").text(version_info.list_of_versions);
+        $("#users_per_version").text(version_info.users_per_version);
+        $("#ten_random_users").text(version_info.ten_random_users);
+    };
+
     $( "#view_database" ).click(function() {
       alert( "Handler for .click() called." );
         $.getJSON('/_view_database', {
-        }, function(data) {
-          $("#count_result").text(data.counts);
-          $("#user_result").text(data.users);
-          users_query=data.users;
+        }, function(version_info){
+          displayInfo(version_info)
         });
         $("#wait").text("Finished querying for data");
         return false;      
@@ -100,13 +106,27 @@
       var num_entries = $('#num_entries_to_create').val();
         $.getJSON('/_populate_database', 
           {"num_entries":num_entries}, 
-          function(data) {
-            $("#count_result").text(data.counts);
-            $("#user_result").text(data.users);
+          function(version_info) {
+            displayInfo(version_info)
           });
           $("#wait").text("Finished populating database");
         return false;      
     });
+
+
+
+    $( "#total_infection" ).click(function() {
+      alert( "Handler for .click() called." );
+        $.getJSON('/_total_infection', 
+          {"infection_version":$('#infection_version').val()}, 
+          function(version_info) {
+            displayInfo(version_info)
+          });
+          $("#wait").text("Finished populating database");
+        return false;      
+    });
+
+
 
     $(function() {
       $('a#calculate').bind('click', function() {
