@@ -1,23 +1,24 @@
 {% extends "layout.html" %}
 {% block content %}
   <div class="container" >
-    <h3 id="myMessage"> Upload an image to search for</h3> 
+    <h3 id="myMessage"> Khan Academy Coding Challenge</h3> 
 
-    <div id="disappearOnClick">
-      <br>
-    	<form class="container" action="upload" method="post" enctype="multipart/form-data">
-    		<input type="file" name="uploadFile"> 
-        <br/>
+    <div id="">
 
-    		<input type="submit" value="Upload the Chosen File" onclick="clickedSubmit()">
-    	</form>
-      <br>
-      <h3>
-      Or choose one from below
+      <input type="submit" id="view_database" value="View Database" onclick="">
 
-      </h3>
-      <br/>
-    {% include "partials/images.html" %}
+
+      <form action="">
+        Number of entries to generate:
+        <input type="text" id="num_entries_to_create" value="100"><br>
+        <input type="submit" id="populate_database" value="Populate Database" onclick="">
+      </form>
+      
+      <div id="count_result"></div>
+      <div id="user_result"></div>
+
+
+      <p id="wait">wait</p>
     </div>
   </div>
 

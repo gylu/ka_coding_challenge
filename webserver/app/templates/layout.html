@@ -82,30 +82,45 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
     <script>
-      $(".nav a").on("click", function(){
-         $(".nav").find(".active").removeClass("active");
-         $(this).parent().addClass("active");
+
+    $( "#view_database" ).click(function() {
+      alert( "Handler for .click() called." );
+        $.getJSON('/_view_database', {
+        }, function(data) {
+          $("#count_result").text(data.counts);
+          $("#user_result").text(data.users);
+          users_query=data.users;
+        });
+        $("#wait").text("Finished querying for data");
+        return false;      
+    });
+
+    $( "#populate_database" ).click(function() {
+      alert( "Handler for .click() called." );
+      var num_entries = $('#num_entries_to_create').val();
+        $.getJSON('/_populate_database', 
+          {"num_entries":num_entries}, 
+          function(data) {
+            $("#count_result").text(data.counts);
+            $("#user_result").text(data.users);
+          });
+          $("#wait").text("Finished populating database");
+        return false;      
+    });
+
+    $(function() {
+      $('a#calculate').bind('click', function() {
+        $.getJSON('/_add_numbers', {
+          a: $('input[name="a"]').val(),
+          b: $('input[name="b"]').val()
+        }, function(data) {
+          $("#result").text(data.result);
+        });
+        $("#wait").text("wait!!!");
+        return false;
       });
+    });
 
-    function clickedSubmit()
-    {
-      document.getElementById("myMessage").innerHTML = "Please wait..."
-      document.getElementById("disappearOnClick").style.display = "none";
-      $("body").scrollTop(0);
-    }
-
-    // $(function() {
-    //   $('a#calculate').bind('click', function() {
-    //     $.getJSON('/_add_numbers', {
-    //       a: $('input[name="a"]').val(),
-    //       b: $('input[name="b"]').val()
-    //     }, function(data) {
-    //       $("#result").text(data.result);
-    //     });
-    //     $("#wait").text("wait!!!");
-    //     return false;
-    //   });
-    // });
 
     $(function() {
       $('a#getallframes').bind('click', function() {

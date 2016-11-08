@@ -56,6 +56,14 @@ SQLite's main drawback is that it can't concurrent writes.
 Approximate hours spent:
 Planning, design decisions on webframework and DB to use: 3hrs
 
+
+Initial popluation:
+Create tables.
+Insert user, get userId.
+Then insert user into courses table and relationships table.
+
+Tutorials followed:
+http://opentechschool.github.io/python-flask/extras/databases.html
 ==============================
 Another way of approaching this problem (the path not taken):
 Using python classes and objects, where each user is an object. 
