@@ -3,6 +3,7 @@
 .timer on
 
 DROP TABLE USERS;
+DELETE FROM USERS;
 CREATE TABLE USERS(
    user_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
    name TEXT,
@@ -10,12 +11,14 @@ CREATE TABLE USERS(
 );
 
 
-
+--allowing user_role also a primary key allows for user to be in a class as both teacher and student
 DROP TABLE ENROLLMENTS;
+Delete FROM ENROLLMENTS;
 CREATE TABLE ENROLLMENTS(
-   course_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-   user_id INTEGER PRIMARY KEY,
-   user_role TEXT
+   course_id INTEGER NOT NULL,
+   user_id INTEGER NOT NULL,
+   user_role TEXT NOT NULL,
+   PRIMARY KEY(course_id, user_id)
 );
 
 

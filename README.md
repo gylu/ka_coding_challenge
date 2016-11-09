@@ -57,13 +57,25 @@ Approximate hours spent:
 Planning, design decisions on webframework and DB to use: 3hrs
 
 
+
 Initial popluation:
 Create tables.
 Insert user, get userId.
 Then insert user into courses table and relationships table.
 
+Synthetic data:
+-Create 20 courses
+-Upon creating a user: 
+--User gets randomly inserted into 1 to 4 courses
+--In 1/10 of such assignments, user will be teacher of course (for other assignments, user will be student)
+
+Some courses might have more than 1 teacher, some courses might have no teachers
+
 Tutorials followed:
 http://opentechschool.github.io/python-flask/extras/databases.html
+
+
+
 ==============================
 Another way of approaching this problem (the path not taken):
 Using python classes and objects, where each user is an object. 

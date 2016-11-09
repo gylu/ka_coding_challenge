@@ -4,30 +4,82 @@
     <h3 id="myMessage"> Khan Academy Coding Challenge</h3> 
 
 
-      <input type="submit" id="view_database" value="View Database" onclick="">
-     <p> Total Number of Users: <span id="total_num_users"></span> </p>
-     <p> Number of distinct versions: <span id="num_of_distinct_versions"></span></p>
-     <p> List of versions: <span id="list_of_versions"></span></p>
-     <p> Users per version: <span id="users_per_version"></span></p>
-     <p> Ten random users: <span id="ten_random_users"></span></p>
+      <h5>Data info</h5>
+      <div> Total Number of Users: <span id="total_num_users_2"></span> </div>
+     <div> Number of distinct versions: <span id="num_of_distinct_versions_2"></span></div>
+     <div> List of versions: <span id="list_of_versions_2"></span></div>
+     <div> Users per version: <span id="users_per_version_2"></span></div>
+     <div> Five random users: <span id="random_users_2"></span></div>
       <br>
+      <h5>Previous numbers, from previous action</h5>
+     <div> Total Number of Users: <span id="total_num_users"></span> </div>
+     <div> Number of distinct versions: <span id="num_of_distinct_versions"></span></div>
+     <div> List of versions: <span id="list_of_versions"></span></div>
+     <div> Users per version: <span id="users_per_version"></span></div>
+     <div> Five random users: <span id="random_users"></span></div>
+     
+     </br>
+      <input type="submit" id="view_database" value="Refresh" onclick="">
+      <div> Status: <span id="wait"></span></div>
 
-      <form action="">
+</br>
+<h4>Actions</h4>
+<h5>Generate data</h5>
+      <form>
         Number of entries to generate:
-        <input type="text" id="num_entries_to_create" value="100"><br>
-        <input type="submit" id="populate_database" value="Populate Database" onclick="">
+        <input type="text" id="num_entries_to_create" value="100">
+        <br>
+        <input type="submit" id="populate_database" value="Insert into Database" onclick="">
       </form>
       
 
-      <p id="wait">wait</p>
-
       <br>
-      <form action="">
-        Version number to infect:
+<h5>Total Infection</h5>
+      <form>
+        Version number to infect with:
         <input type="text" id="infection_version" value="1.1"><br>
         <input type="submit" id="total_infection" value="Perofrm Total Infection" onclick="">
       </form>
 
+      <br>
+
+<h5>Limited Infection</h5>      
+      <form>
+        Version number to infect with: <input type="text" id="limited_infection_version" value="1.1">
+        User ID to infect: <input type="text" id="user_id_to_infect" value="1"><br>
+
+
+          Limited Infection Type
+        <br>
+          <span>
+            
+            <label>
+            <input type="radio" name="limited_infection_type" value="ALL_RELATIONS_RECUR" checked="checked"/>
+            All coaches and coached by, recursively
+            </label>
+          </span>
+        <br>
+          <span>
+            <label>
+            <input type="radio" name="limited_infection_type" value="ALL_RELATIONS"/>
+            All coaches and coached by
+            </label>
+          </span>
+        <br>
+          <span>
+            <label>
+            <input type="radio" name="limited_infection_type" value="SAME_COURSE"/>
+            In Same Courses
+            </label>
+          </span>
+         <br>
+
+        <input type="submit" id="limited_infection" value="Perofrm Limited Infection" onclick="">
+      </form>
+  <br>
+<h5>Delete</h5>   
+      <input type="submit" id="delete_all_entries_from_db" value="Delete All Entries from Database" onclick="">
+      <br>
 
   </div>
 

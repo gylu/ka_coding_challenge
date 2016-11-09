@@ -83,16 +83,38 @@
 
     <script>
 
+    $(document).ready(function(){
+        $.getJSON('/_view_database', {
+        }, function(version_info){
+          displayInfo(version_info)
+        });
+    });
+
     function displayInfo(version_info) {
-        $("#total_num_users").text(version_info.total_num_users);
-        $("#num_of_distinct_versions").text(version_info.num_of_distinct_versions);
-        $("#list_of_versions").text(version_info.list_of_versions);
-        $("#users_per_version").text(version_info.users_per_version);
-        $("#ten_random_users").text(version_info.ten_random_users);
+        $("#total_num_users").text($("#total_num_users_2").text());
+        $("#num_of_distinct_versions").text($("#num_of_distinct_versions_2").text());
+        $("#list_of_versions").text($("#list_of_versions_2").text());
+        $("#users_per_version").text($("#users_per_version_2").text());
+        $("#random_users").text($("#random_users_2").text());
+
+        $("#total_num_users_2").text(version_info.total_num_users);
+        $("#num_of_distinct_versions_2").text(version_info.num_of_distinct_versions);
+        $("#list_of_versions_2").text(version_info.list_of_versions.join(", "));
+        $("#users_per_version_2").text(version_info.users_per_version.join(", "));
+        $("#random_users_2").text(version_info.random_users.join(", "));        
     };
 
+    $( "#delete_all_entries_from_db" ).click(function() {
+        $.getJSON('/_delete_all_entries_from_db', {
+        }, function(version_info){
+          displayInfo(version_info)
+        });
+        $("#wait").text("Finished deleting");
+        return false;      
+    });
+
+
     $( "#view_database" ).click(function() {
-      alert( "Handler for .click() called." );
         $.getJSON('/_view_database', {
         }, function(version_info){
           displayInfo(version_info)
@@ -102,7 +124,6 @@
     });
 
     $( "#populate_database" ).click(function() {
-      alert( "Handler for .click() called." );
       var num_entries = $('#num_entries_to_create').val();
         $.getJSON('/_populate_database', 
           {"num_entries":num_entries}, 
@@ -116,16 +137,28 @@
 
 
     $( "#total_infection" ).click(function() {
-      alert( "Handler for .click() called." );
         $.getJSON('/_total_infection', 
           {"infection_version":$('#infection_version').val()}, 
           function(version_info) {
             displayInfo(version_info)
           });
-          $("#wait").text("Finished populating database");
+          $("#wait").text("Finished performing total infection");
         return false;      
     });
 
+
+    $( "#limited_infection" ).click(function() {
+        $.getJSON('/_limited_infection', 
+          {"infection_version":$('#limited_infection_version').val(),
+            "user_id_to_infect":$('#user_id_to_infect').val(),
+            "limited_infection_type":$('input[name=limited_infection_type]:checked').val()
+          }, 
+          function(version_info) {
+            displayInfo(version_info)
+          });
+          $("#wait").text("Finished performing limited infection");
+        return false;      
+    });
 
 
     $(function() {
