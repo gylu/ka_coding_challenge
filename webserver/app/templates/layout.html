@@ -95,13 +95,13 @@
         $("#num_of_distinct_versions").text($("#num_of_distinct_versions_2").text());
         $("#list_of_versions").text($("#list_of_versions_2").text());
         $("#users_per_version").text($("#users_per_version_2").text());
-        $("#random_users").text($("#random_users_2").text());
+        $("#random_users").html($("#random_users_2").html());
 
         $("#total_num_users_2").text(version_info.total_num_users);
         $("#num_of_distinct_versions_2").text(version_info.num_of_distinct_versions);
         $("#list_of_versions_2").text(version_info.list_of_versions.join(", "));
         $("#users_per_version_2").text(version_info.users_per_version.join(", "));
-        $("#random_users_2").text(version_info.random_users.join(", "));        
+        $("#random_users_2").html("<br>"+version_info.random_users.join("<br>"));        
     };
 
     $( "#delete_all_entries_from_db" ).click(function() {
@@ -123,10 +123,16 @@
         return false;      
     });
 
+
     $( "#populate_database" ).click(function() {
-      var num_entries = $('#num_entries_to_create').val();
         $.getJSON('/_populate_database', 
-          {"num_entries":num_entries}, 
+          {
+          "num_users_to_create":$('#num_users_to_create').val(),
+          "max_num_courses_user_can_be_in":$('#max_num_courses_user_can_be_in').val(),
+          "total_num_courses":$('#total_num_courses').val(),
+          "students_per_teacher":$('#students_per_teacher').val(),
+          "version_number":$('#version_number').val()
+          }, 
           function(version_info) {
             displayInfo(version_info)
           });
@@ -137,6 +143,7 @@
 
 
     $( "#total_infection" ).click(function() {
+      $("#wait").text("Please wait, performing total infection");
         $.getJSON('/_total_infection', 
           {"infection_version":$('#infection_version').val()}, 
           function(version_info) {
@@ -148,6 +155,7 @@
 
 
     $( "#limited_infection" ).click(function() {
+       $("#wait").text("Please wait, performing limited infection");
         $.getJSON('/_limited_infection', 
           {"infection_version":$('#limited_infection_version').val(),
             "user_id_to_infect":$('#user_id_to_infect').val(),
@@ -158,76 +166,6 @@
           });
           $("#wait").text("Finished performing limited infection");
         return false;      
-    });
-
-
-    $(function() {
-      $('a#calculate').bind('click', function() {
-        $.getJSON('/_add_numbers', {
-          a: $('input[name="a"]').val(),
-          b: $('input[name="b"]').val()
-        }, function(data) {
-          $("#result").text(data.result);
-        });
-        $("#wait").text("wait!!!");
-        return false;
-      });
-    });
-
-
-    $(function() {
-      $('a#getallframes').bind('click', function() {
-        var me=$(this)
-        videoname=me.attr('videoname')
-        targetimagehash=me.attr('targetimagehash')
-        imagename=me.attr('imagename')
-        chartcount=me.attr('chartcount')
-        $.getJSON('/_getallframes', {
-          videoname: videoname,
-          targetimagehash: targetimagehash,
-          imagename: imagename
-        }, function(output) {
-          var chart = c3.generate({
-              bindto: '#chart__'+chartcount.toString(),
-              size: {
-                  height: 360,
-                  width: 853
-              },
-              data: {
-                x: 'x',
-                //xFormat: '%Y%m%d', // 'xFormat' can be used as custom format of 'x'
-                columns: [
-                  ['x'].concat(output.times),
-                  ['HammingDist_of_hashes'].concat(output.distances),
-                  ['One_minus_cosineSim_of_histograms'].concat(output.cosinedistances)
-                ],
-                axes: {
-                  HammingDist_of_hashes: 'y',
-                  One_minus_cosineSim_of_histograms: 'y2'
-                }
-              },
-              axis: {
-                x: {
-                  //type: 'timeseries',
-                  tick: {
-                  //    format: '%S'
-                    // values: [output.times]
-                    fit:true,
-                    rotate:60
-                  }
-                },
-                y: {
-                  show: true
-                },
-                y2: {
-                  show: true
-                }
-              }
-          });
-
-        });
-        return false;
-      });
     });
 
 
