@@ -32,13 +32,13 @@ def count_infection_versions():
     """
     Helper function response to an AJAX call to perform some queries
     """
-    total_num_users = g.db.execute("SELECT count(*) FROM USERS;").fetchall()
-    num_of_distinct_versions = g.db.execute("SELECT count(distinct(version)) FROM users").fetchall()[0][0]
-    list_of_versions = [version_item[0] for version_item in g.db.execute("SELECT distinct(version) FROM users").fetchall()] #because the query returns with: [(1.1,), (1,)]
-    random_users = g.db.execute("SELECT * FROM USERS ORDER BY RANDOM() LIMIT 5;").fetchall()
+    total_num_users = g.db.execute("SELECT count(*) FROM USERS;").fetchall() #added comment: O(N) or O(1)
+    num_of_distinct_versions = g.db.execute("SELECT count(distinct(version)) FROM users").fetchall()[0][0] #added comment: O(N)
+    list_of_versions = [version_item[0] for version_item in g.db.execute("SELECT distinct(version) FROM users").fetchall()] #because the query returns with: [(1.1,), (1,)]. #added comment: O(N)
+    random_users = g.db.execute("SELECT * FROM USERS ORDER BY RANDOM() LIMIT 5;").fetchall() ##added comment: O(1)
     users_per_version=[]
-    for version in list_of_versions:
-        users_per_version.append(g.db.execute("SELECT count(*) FROM users where version="+str(version)).fetchall()[0][0])
+    for version in list_of_versions: #added comment: O(N*N) total depending on how many versions there are
+        users_per_version.append(g.db.execute("SELECT count(*) FROM users where version="+str(version)).fetchall()[0][0]) #this is O(N) because I don't have index.
     versions_info={"total_num_users":total_num_users,"num_of_distinct_versions":num_of_distinct_versions, "list_of_versions":list_of_versions, "users_per_version":users_per_version, "random_users":random_users}
     print("versions_info:",versions_info)
     return versions_info
@@ -70,7 +70,7 @@ def total_infection():
     """    
     infection_version=request.args.get('infection_version', 0, type=str)
     print("Performing total infection. Infection_version", infection_version)
-    query = 'update users set version='+str(infection_version)
+    query = 'update users set version='+str(infection_version) #O(N)
     execute_statement(query)
     return jsonify(count_infection_versions())
 
@@ -84,6 +84,9 @@ def limited_infection():
     limited_infection_type can be one of two options:
     SAME_COURSES_ONLY: only infects everyone that is in the same course as the user.
     ALL_RELATIONS_RECUR: infects every course mate of the user (i.e. everyone that is in the same course as the user), and then does the same thing for each course mate, until they all have been infected
+    # 1. query to get all class mates of target user, for every class the target user is in
+    # 2. infect all of these classmates
+    # 3. repeat step 1 for each of these classmates
     """        
     print("Running limited infection")
     infection_version=request.args.get('infection_version', 0, type=str)
@@ -93,38 +96,42 @@ def limited_infection():
     print("user_id_to_infect:", user_id_to_infect)
     print("limited_infection_type:", limited_infection_type)
     #ALL_RELATIONS_RECUR, ALL_RELATIONS, SAME_COURSE_ONLY
-    if limited_infection_type=='SAME_COURSES_ONLY':
+    if limited_infection_type=='SAME_COURSES_ONLY': #this loop is most likely O(N^2), or O(NlogN) to go through an indexed version of this
         statement='update users set version='+infection_version+' where user_id in (select user_id from ENROLLMENTS where course_id in (select course_id from ENROLLMENTS where user_id='+user_id_to_infect+'))'
         execute_statement(statement)
     #this gets all the users in the same courses as user_id_to_infect and infect them, then repeat for those users
     elif limited_infection_type=='ALL_RELATIONS_RECUR':
         users_to_infect=set()
         users_to_infect.add(user_id_to_infect)
-        while users_to_infect: 
+        while users_to_infect: #This whole loop is O(N^2 log N)
             user_id_to_infect_in_loop=str(users_to_infect.pop())
             print("user_id_to_infect_in_loop: ", user_id_to_infect_in_loop)
             print("infection_version: ", infection_version)
-            query=(
+            query=( #this query is O(NlogN). This query gets all the users that have the same course as the target user
                 'select u1.user_id from '
                 'ENROLLMENTS e1 '
                 'join users u1 '
                 'on u1.user_id=e1.user_id '
-                'where u1.version<>'+infection_version+' '
+                'where u1.version<>'+infection_version+' ' #this prevents looping
                 'and e1.course_id in '
                 '(select e2.course_id from '
                     'ENROLLMENTS e2 where e2.user_id='+user_id_to_infect_in_loop+')'
             )
             print("query: ",query)
+            # 1. query to get all classmates
             more_users=g.db.execute(query).fetchall()
             print("more_users: ", more_users)
             for new_user_to_add in more_users:
-                users_to_infect.add(new_user_to_add[0])
+                # 3. repeating step 1 for each of these classmates
+                users_to_infect.add(new_user_to_add[0]) #new_user_to_add is of the form (user_id,name,version,)  - has a comma at the end for some reason
+
             statement=(
                 'update users set version='+infection_version+' '
                 'where user_id in '
                  +'('+query+');'
             )
             print("statement: ", statement)
+            # 2. infect all of these classmates
             execute_statement(statement)
     return jsonify(count_infection_versions())
 

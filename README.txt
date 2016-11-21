@@ -39,7 +39,7 @@ Flask (I have some familiarty with flask, where as Django would be too heavyweig
 
 
 # Database considerations:
-* I am going to use SQLITE. Most linux machines come pre-installed with sqllite. SQLite's main drawback is that it can't concurrent writes and only runs on one machine, but that is acceptable for this project.
+* I am going to use SQLITE. Most linux machines come pre-installed with sqllite. SQLite's main drawback is that it can't do concurrent writes and only runs on one machine, but that is acceptable for this project.
 * For a more capable database in the future, maybe MySQL or Postgres: http://stackoverflow.com/questions/4813890/sqlite-or-mysql-how-to-decide
 * Postgres is more SQL standard adhereing than MySQL, more capable that sqlite.
 * SQL databases are easier/smaller memory requirements than Neo4j or Casandra.
