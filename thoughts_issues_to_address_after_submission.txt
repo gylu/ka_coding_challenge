@@ -7,7 +7,7 @@ Testing:
 
 
 # Runtime:
-limited_infection_type=='ALL_RELATIONS_RECUR'
+infection_type=='ALL_RELATIONS_RECUR'
 
 
 # Optimizations and updates that could have been made:

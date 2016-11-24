@@ -20,18 +20,18 @@ The entire logic is in the file: khan_coding_challenge/webserver/app/views.py
 	- Starting from any given user, the entire connected component of the coaching graph containing that user should become infected.
  	- Infections are transitive
  	- Infections are transferred by both the “coaches” and “is coached by” relations
- 2. limited_infection
+ 2. perform_infection
 
 
 # Solution:
 Treat problem as a sql problem:
 * A user will be a row in a database
 * Total_infection would then be an update sql call
-* Limited_infection would also be a sql call
+* perform_infection would also be a sql call
 Pros:
 Easier to perform total_infection (just update all users)
 Cons:
-Harder to perform limited_infection (might require some complicated joins)
+Harder to perform perform_infection (might require some complicated joins)
 
 
 # Web framework to use:
@@ -86,11 +86,11 @@ def total_infection(newVersion, targetUser):
 			total_infection(user,newVersion)
 
 Spreading a limited infection will involve doing a recursive call such as:
-def limited_infection(newVersion, targetUser, infection_type):
+def perform_infection(newVersion, targetUser, infection_type):
 	targetUser.version=newVersion
 	if infection_type=="class_only":
 		for user in targetUser.coaches + targetUser.coachedby:
-				limited_infection(user,newVersion)
+				perform_infection(user,newVersion)
 	elif infection_type=="something_else"...
 
 Drawbacks to this approach:
@@ -100,6 +100,6 @@ Drawbacks to this approach:
 * Might be difficult to implement graphs in python: e.g. https://www.python.org/doc/essays/graphs/
 
 Pros:
-* Perhaps shorter runtime to perform limited_infection
+* Perhaps shorter runtime to perform perform_infection
 
 BUT, I think for this coding challenege, using an actual database is a more realistic approach.

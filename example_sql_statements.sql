@@ -14,7 +14,17 @@ CREATE TABLE USERS(
 );
 
 
---allowing user_role also a primary key allows for user to be in a class as both teacher and student
+
+DROP TABLE RELATIONSHIPS;
+Delete FROM RELATIONSHIPS;
+CREATE TABLE RELATIONSHIPS(
+   teacher_id INTEGER NOT NULL,
+   student_id INTEGER NOT NULL,
+   PRIMARY KEY(teacher_id, student_id)
+);
+
+
+#previous way of modeling data
 DROP TABLE ENROLLMENTS;
 Delete FROM ENROLLMENTS;
 CREATE TABLE ENROLLMENTS(
@@ -25,7 +35,10 @@ CREATE TABLE ENROLLMENTS(
 );
 
 
+#number of users totals
+#number of teachers in those users
 
+#but this data can be obtained from the enrollments table
 
 
 

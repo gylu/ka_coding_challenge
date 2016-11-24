@@ -90,19 +90,37 @@
         });
     });
 
-    function displayInfo(version_info) {
-        $("#total_num_users").text($("#total_num_users_2").text());
-        $("#num_of_distinct_versions").text($("#num_of_distinct_versions_2").text());
-        $("#list_of_versions").text($("#list_of_versions_2").text());
-        $("#users_per_version").text($("#users_per_version_2").text());
-        $("#random_users").html($("#random_users_2").html());
 
-        $("#total_num_users_2").text(version_info.total_num_users);
-        $("#num_of_distinct_versions_2").text(version_info.num_of_distinct_versions);
-        $("#list_of_versions_2").text(version_info.list_of_versions.join(", "));
-        $("#users_per_version_2").text(version_info.users_per_version.join(", "));
-        $("#random_users_2").html("<br>"+version_info.random_users.join("<br>"));        
-    };
+    $( "#populate_database" ).click(function() {
+        $.getJSON('/_populate_database', 
+          {
+          "num_users_to_create":$('#num_users_to_create').val(),
+          "max_num_courses_user_can_be_in":$('#max_num_courses_user_can_be_in').val(),
+          "num_teachers":$('#num_teachers').val(),
+          "version_number":$('#version_number').val()
+          }, 
+          function(version_info) {
+            displayInfo(version_info)
+          });
+          $("#wait").text("Finished populating database");
+        return false;      
+    });
+
+
+    $("#perform_infection").click(function() {
+       $("#wait").text("Please wait, performing limited infection");
+        $.getJSON('/_perform_infection', 
+          {"infection_version":$('#infection_version').val(),
+            "user_id_to_infect":$('#user_id_to_infect').val(),
+            "infection_type":$('input[name=infection_type]:checked').val()
+          }, 
+          function(version_info) {
+            displayInfo(version_info)
+          });
+          $("#wait").text("Finished performing limited infection");
+        return false;      
+    });
+
 
     $( "#delete_all_entries_from_db" ).click(function() {
         $.getJSON('/_delete_all_entries_from_db', {
@@ -123,50 +141,20 @@
         return false;      
     });
 
+    function displayInfo(version_info) {
+        $("#total_num_users").text($("#total_num_users_2").text());
+        $("#num_of_distinct_versions").text($("#num_of_distinct_versions_2").text());
+        $("#list_of_versions").text($("#list_of_versions_2").text());
+        $("#users_per_version").text($("#users_per_version_2").text());
+        $("#random_users").html($("#random_users_2").html());
 
-    $( "#populate_database" ).click(function() {
-        $.getJSON('/_populate_database', 
-          {
-          "num_users_to_create":$('#num_users_to_create').val(),
-          "max_num_courses_user_can_be_in":$('#max_num_courses_user_can_be_in').val(),
-          "total_num_courses":$('#total_num_courses').val(),
-          "students_per_teacher":$('#students_per_teacher').val(),
-          "version_number":$('#version_number').val()
-          }, 
-          function(version_info) {
-            displayInfo(version_info)
-          });
-          $("#wait").text("Finished populating database");
-        return false;      
-    });
+        $("#total_num_users_2").text(version_info.total_num_users);
+        $("#num_of_distinct_versions_2").text(version_info.num_of_distinct_versions);
+        $("#list_of_versions_2").text(version_info.list_of_versions.join(", "));
+        $("#users_per_version_2").text(version_info.users_per_version.join(", "));
+        $("#random_users_2").html("<br>"+version_info.random_users.join("<br>"));        
+    };
 
-
-
-    $( "#total_infection" ).click(function() {
-      $("#wait").text("Please wait, performing total infection");
-        $.getJSON('/_total_infection', 
-          {"infection_version":$('#infection_version').val()}, 
-          function(version_info) {
-            displayInfo(version_info)
-          });
-          $("#wait").text("Finished performing total infection");
-        return false;      
-    });
-
-
-    $( "#limited_infection" ).click(function() {
-       $("#wait").text("Please wait, performing limited infection");
-        $.getJSON('/_limited_infection', 
-          {"infection_version":$('#limited_infection_version').val(),
-            "user_id_to_infect":$('#user_id_to_infect').val(),
-            "limited_infection_type":$('input[name=limited_infection_type]:checked').val()
-          }, 
-          function(version_info) {
-            displayInfo(version_info)
-          });
-          $("#wait").text("Finished performing limited infection");
-        return false;      
-    });
 
 
     </script>

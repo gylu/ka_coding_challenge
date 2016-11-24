@@ -62,26 +62,13 @@ def delete_all_entries_from_db():
     return jsonify(count_infection_versions())
 
 
-@app.route('/_total_infection')
-def total_infection():
-    """
-    Called via AJAX from the client side
-    Performs a "total infection", by simple updating all rows in USERS table with new version
-    """    
-    infection_version=request.args.get('infection_version', 0, type=str)
-    print("Performing total infection. Infection_version", infection_version)
-    query = 'update users set version='+str(infection_version) #O(N)
-    execute_statement(query)
-    return jsonify(count_infection_versions())
-
-
-@app.route('/_limited_infection')
-def limited_infection():
+@app.route('/_perform_infection')
+def perform_infection():
     """
     Called via AJAX from the client side
     Performs a "limited infection"
     Input: AJAX input 
-    limited_infection_type can be one of two options:
+    infection_type can be one of two options:
     SAME_COURSES_ONLY: only infects everyone that is in the same course as the user.
     ALL_RELATIONS_RECUR: infects every course mate of the user (i.e. everyone that is in the same course as the user), and then does the same thing for each course mate, until they all have been infected
     # 1. query to get all class mates of target user, for every class the target user is in
@@ -91,16 +78,16 @@ def limited_infection():
     print("Running limited infection")
     infection_version=request.args.get('infection_version', 0, type=str)
     user_id_to_infect=request.args.get('user_id_to_infect', 0, type=str)
-    limited_infection_type=request.args.get('limited_infection_type', 0, type=str)
+    infection_type=request.args.get('infection_type', 0, type=str)
     print("infection_version:", infection_version)
     print("user_id_to_infect:", user_id_to_infect)
-    print("limited_infection_type:", limited_infection_type)
+    print("infection_type:", infection_type)
     #ALL_RELATIONS_RECUR, ALL_RELATIONS, SAME_COURSE_ONLY
-    if limited_infection_type=='SAME_COURSES_ONLY': #this loop is most likely O(N^2), or O(NlogN) to go through an indexed version of this
+    if infection_type=='LIMITED': #this loop is most likely O(N^2), or O(NlogN) to go through an indexed version of this
         statement='update users set version='+infection_version+' where user_id in (select user_id from ENROLLMENTS where course_id in (select course_id from ENROLLMENTS where user_id='+user_id_to_infect+'))'
         execute_statement(statement)
     #this gets all the users in the same courses as user_id_to_infect and infect them, then repeat for those users
-    elif limited_infection_type=='ALL_RELATIONS_RECUR':
+    elif infection_type=='TOTAL':
         users_to_infect=set()
         users_to_infect.add(user_id_to_infect)
         while users_to_infect: #This whole loop is O(N^2 log N)
@@ -156,9 +143,12 @@ def populate_database():
     #parse variables from the ajax request
     num_users_to_create=request.args.get('num_users_to_create', 0, type=int)
     max_num_courses_user_can_be_in=request.args.get('max_num_courses_user_can_be_in', 0, type=int)
-    total_num_courses=request.args.get('total_num_courses', 0, type=int)
-    students_per_teacher=request.args.get('students_per_teacher', 0, type=int)
+    num_teachers=request.args.get('num_teachers', 0, type=int)
     version_number=request.args.get('version_number', 0, type=str)
+
+
+
+
     #course_ids will be incremental, starting from 1
     list_possible_courses=[num for num in range(1,total_num_courses+1)]
     count=0
