@@ -9,6 +9,7 @@ from flask import Flask, render_template, request, redirect, url_for, Response, 
 from app import app
 import random
 import string
+import pdb
 
 DATABASE = '../ka_challenge.db' #assuming we are running from coding_challenge/webserver/run.py, and ka_challenge.db is at coding_challenge/users.db
 
@@ -53,7 +54,7 @@ def delete_all_entries_from_db():
     Does not delete the tables
     """
     cur = g.db.cursor()
-    statement = 'Delete FROM ENROLLMENTS;'
+    statement = 'Delete FROM RELATIONSHIPS;'
     cur.execute(statement)
     statement = 'Delete FROM USERS;'
     cur.execute(statement)
@@ -142,38 +143,93 @@ def populate_database():
     print("request.args: ", request.args)
     #parse variables from the ajax request
     num_users_to_create=request.args.get('num_users_to_create', 0, type=int)
-    max_num_courses_user_can_be_in=request.args.get('max_num_courses_user_can_be_in', 0, type=int)
     num_teachers=request.args.get('num_teachers', 0, type=int)
     version_number=request.args.get('version_number', 0, type=str)
 
+    '''
+    1. create the total number of uesers, insert into USERS table
+    2. select the teachers (randomly, without replacement from list)
+    3. for each teacher, associate with each teacher:
+        num_users_to_create * num_teachers_student_can_have/num_teachers, without replacement 
+    
+    conditions to allow:
+    Without replacement:
+        -Allow all students to go with one teacher
+        -If more than one teacher, allow equal number of students per teacher
+            -every teacher will get some students
 
-
-
-    #course_ids will be incremental, starting from 1
-    list_possible_courses=[num for num in range(1,total_num_courses+1)]
+    With replacement, allowing other teachers 
+        -If more than one teacher:
+        
+        -One first time around, run without replacement to ensure each teacher gets students
+            -On the second time around, makea new set of total num users, including the teachers, and allow teachers to be in the same set
+    '''
     count=0
     cur = g.db.cursor()
+    newly_added=set()
     while count < num_users_to_create:
         userName=random.choice(string.ascii_letters[26::])+random.choice(['a','e','i','o','u','y'])+random.choice(string.ascii_letters[0:26])+random.choice(string.ascii_letters[0:26])+random.choice(['a','e','i','o','u','y'])
         statement = make_insert_statement("USERS", ['name','version'], [userName,version_number])
         count+=1
         cur.execute(statement, [userName,version_number]) #the execute statement needs to have the values there
-        user_id_just_created = cur.lastrowid
-        #randomly determine how many courses this user will be in, from 1 to the max_num_courses_user_can_be_in
-        number_of_courses_user_enrolled_in = random.choice(range(1,max_num_courses_user_can_be_in+1))
-        courses_user_enrolled_in = random.sample(list_possible_courses,number_of_courses_user_enrolled_in) #samples without replacement
-        #for each course, randomly determine user's role. 1 of 20 becomes teacher
-        for course_id in courses_user_enrolled_in:
-            if random.randrange(students_per_teacher) == 1:
-                role='TEACHER'
-            else:
-                role='STUDENT'
-            values=[course_id,user_id_just_created,role]
-            statement = make_insert_statement("ENROLLMENTS", ['course_id','user_id', 'user_role'], values)
-            cur.execute(statement,values)
+        last_row=cur.lastrowid
+        newly_added.add(last_row)
+    g.db.commit()
+    cur.close()
+    # pdb.set_trace()
+    teachers=random.sample(newly_added,num_teachers)
+    newly_added.difference_update(teachers) #remove the teachers that were just sampled out
+    avg_num_stuents_per_teacher=num_users_to_create//len(teachers)
+    cur = g.db.cursor()
+    for i,teacher in enumerate(teachers):
+        #randomly assign some students
+        if i+1==len(teachers):
+            students=newly_added #add all remaining number of students
+        else:
+            students=random.sample(newly_added, random.randint(int(avg_num_stuents_per_teacher-0.3*len(newly_added)),int(avg_num_stuents_per_teacher+0.3*len(newly_added))))
+            newly_added.difference_update(students)
+        for student in students:
+            print("students", students)
+            statement=make_insert_statement("RELATIONSHIPS", ['teacher_id','student_id'],[teacher,student])
+            cur.execute(statement, [teacher,student]) #the execute statement needs to have the values there
     g.db.commit()
     cur.close()
     return jsonify(count_infection_versions())
+
+
+
+    # num_users_to_create=request.args.get('num_users_to_create', 0, type=int)
+    # max_num_courses_user_can_be_in=request.args.get('max_num_courses_user_can_be_in', 0, type=int)
+    # total_num_courses=request.args.get('total_num_courses', 0, type=int)
+    # students_per_teacher=request.args.get('students_per_teacher', 0, type=int)
+    # version_number=request.args.get('version_number', 0, type=str)
+    #course_ids will be incremental, starting from 1
+    #old stuff, now commented out
+
+    # list_possible_courses=[num for num in range(1,total_num_courses+1)]
+    # count=0
+    # cur = g.db.cursor()
+    # while count < num_users_to_create:
+    #     userName=random.choice(string.ascii_letters[26::])+random.choice(['a','e','i','o','u','y'])+random.choice(string.ascii_letters[0:26])+random.choice(string.ascii_letters[0:26])+random.choice(['a','e','i','o','u','y'])
+    #     statement = make_insert_statement("USERS", ['name','version'], [userName,version_number])
+    #     count+=1
+    #     cur.execute(statement, [userName,version_number]) #the execute statement needs to have the values there
+    #     user_id_just_created = cur.lastrowid
+    #     #randomly determine how many courses this user will be in, from 1 to the max_num_courses_user_can_be_in
+    #     number_of_courses_user_enrolled_in = random.choice(range(1,max_num_courses_user_can_be_in+1))
+    #     courses_user_enrolled_in = random.sample(list_possible_courses,number_of_courses_user_enrolled_in) #samples without replacement
+    #     #for each course, randomly determine user's role. 1 of 20 becomes teacher
+    #     for course_id in courses_user_enrolled_in:
+    #         if random.randrange(students_per_teacher) == 1:
+    #             role='TEACHER'
+    #         else:
+    #             role='STUDENT'
+    #         values=[course_id,user_id_just_created,role]
+    #         statement = make_insert_statement("ENROLLMENTS", ['course_id','user_id', 'user_role'], values)
+    #         cur.execute(statement,values)
+    # g.db.commit()
+    # cur.close()
+    # return jsonify(count_infection_versions())
 
 
 def make_insert_statement(table, fields=(), values=()):

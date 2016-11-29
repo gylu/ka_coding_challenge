@@ -15,8 +15,8 @@ CREATE TABLE USERS(
 
 
 
-DROP TABLE RELATIONSHIPS;
 Delete FROM RELATIONSHIPS;
+DROP TABLE RELATIONSHIPS;
 CREATE TABLE RELATIONSHIPS(
    teacher_id INTEGER NOT NULL,
    student_id INTEGER NOT NULL,
@@ -24,6 +24,12 @@ CREATE TABLE RELATIONSHIPS(
 );
 
 
+
+
+
+
+
+######### previous stuff not using anymore ########
 #previous way of modeling data
 DROP TABLE ENROLLMENTS;
 Delete FROM ENROLLMENTS;
