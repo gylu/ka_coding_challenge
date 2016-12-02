@@ -37,11 +37,17 @@ def count_infection_versions():
     num_of_distinct_versions = g.db.execute("SELECT count(distinct(version)) FROM users").fetchall()[0][0] #added comment: O(N)
     list_of_versions = [version_item[0] for version_item in g.db.execute("SELECT distinct(version) FROM users").fetchall()] #because the query returns with: [(1.1,), (1,)]. #added comment: O(N)
     random_users = g.db.execute("SELECT * FROM USERS ORDER BY RANDOM() LIMIT 5;").fetchall() ##added comment: O(1)
+    all_users = g.db.execute("SELECT user_id, version FROM USERS;").fetchall() #O(1) runtime?
+    nodes=[{'id': item[0], 'group':item[1]} for item in all_users]
+    all_relationships = g.db.execute("SELECT * FROM RELATIONSHIPS;").fetchall()
+    links=[{"source":item[0], "target":item[1],"value":1} for item in all_relationships]
+    #pdb.set_trace()
+
     users_per_version=[]
     for version in list_of_versions: #added comment: O(N*N) total depending on how many versions there are
         users_per_version.append(g.db.execute("SELECT count(*) FROM users where version="+str(version)).fetchall()[0][0]) #this is O(N) because I don't have index.
-    versions_info={"total_num_users":total_num_users,"num_of_distinct_versions":num_of_distinct_versions, "list_of_versions":list_of_versions, "users_per_version":users_per_version, "random_users":random_users}
-    print("versions_info:",versions_info)
+    versions_info={"nodes":nodes,"links":links,"total_num_users":total_num_users,"num_of_distinct_versions":num_of_distinct_versions, "list_of_versions":list_of_versions, "users_per_version":users_per_version, "random_users":random_users}
+    #print("versions_info:",versions_info)
     return versions_info
 
 

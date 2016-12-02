@@ -27,6 +27,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.js" charset="utf-8"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
 
+
+    <style>
+
+
+    .links line {
+      stroke: #999;
+      stroke-opacity: 0.6;
+    }
+
+    .nodes circle {
+      stroke: #fff;
+      stroke-width: 1.5px;
+    }
+
+    </style>
+    
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+
     <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
     <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
     <!--<script src="../../assets/js/ie-emulation-modes-warning.js"></script> -->
@@ -42,6 +60,7 @@
   </head>
 
   <body>
+
 
     <!-- Fixed navbar -->
     <nav class="navbar navbar-default">
@@ -84,76 +103,190 @@
     <script>
 
     $(document).ready(function(){
+
+
+
+        var svg = d3.select("svg")
+        var width = +svg.attr("width"),
+            height = +svg.attr("height"),
+            radius=10;
+        var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+// notes for how to play with force: https://github.com/d3/d3-force
+        var simulation = d3.forceSimulation()
+            .force("link", d3.forceLink().id(function(d) { return d.id; }))
+            .force("charge", d3.forceManyBody().strength(-0.5))
+            .force("center", d3.forceCenter(width / 2, height / 2));
+
+
+      var links=[]
+      var nodes=[]
+
+        function update_graph(){
+          $("#svgid").empty();
+            var link = svg.append("g")
+                  .attr("class", "links")
+                .selectAll("line")
+                .data(links)
+                .enter().append("line")
+                  .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+              var node = svg.append("g")
+                  .attr("class", "nodes")
+                .selectAll("circle")
+                .data(nodes)
+                .enter().append("circle")
+                  .attr("r", 5)
+                  .attr("fill", function(d) { return color(d.group); })
+                  .call(d3.drag()
+                      .on("start", dragstarted)
+                      .on("drag", dragged)
+                      .on("end", dragended));
+
+              node.append("title")
+                  .text(function(d) { return d.id; });
+
+              simulation
+                  .nodes(nodes)
+                  .on("tick", ticked);
+
+              simulation.force("link")
+                  .links(links);
+
+              function ticked() {
+                link
+                    .attr("x1", function(d) { return d.source.x; })
+                    .attr("y1", function(d) { return d.source.y; })
+                    .attr("x2", function(d) { return d.target.x; })
+                    .attr("y2", function(d) { return d.target.y; });
+
+                // node
+                //     .attr("cx", function(d) { return d.x; })
+                //     .attr("cy", function(d) { return d.y; });
+
+                    node
+                    .attr("cx", function(d) { return d.x = Math.max(radius, Math.min(width - radius, d.x)); })
+                    .attr("cy", function(d) { return d.y = Math.max(radius, Math.min(height - radius, d.y)); });
+              }
+
+
+              var legend = svg.selectAll(".legend")
+              .data(color.domain())
+              .enter().append("g")
+              .attr("class", "legend")
+              .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+              legend.append("text")
+                  .attr("x", width - 24)
+                  .attr("y", 9)
+                  .attr("dy", ".35em")
+                  .style("text-anchor", "end")
+                  .text(function(d) { return "version: "+ d; });
+              legend.append("rect")
+                  .attr("x", width - 18)
+                  .attr("width", 18)
+                  .attr("height", 18)
+                  .style("fill", color);
+    
+          }
+
+        update_graph()
+
+        function dragstarted(d) {
+          if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+          d.fx = d.x;
+          d.fy = d.y;
+        }
+
+        function dragged(d) {
+          d.fx = d3.event.x;
+          d.fy = d3.event.y;
+        }
+
+        function dragended(d) {
+          if (!d3.event.active) simulation.alphaTarget(0);
+          d.fx = null;
+          d.fy = null;
+        }
+
+
+        function displayInfo(version_info) {
+            $("#total_num_users").text($("#total_num_users_2").text());
+            $("#num_of_distinct_versions").text($("#num_of_distinct_versions_2").text());
+            $("#list_of_versions").text($("#list_of_versions_2").text());
+            $("#users_per_version").text($("#users_per_version_2").text());
+            $("#random_users").html($("#random_users_2").html());
+
+            $("#total_num_users_2").text(version_info.total_num_users);
+            $("#num_of_distinct_versions_2").text(version_info.num_of_distinct_versions);
+            $("#list_of_versions_2").text(version_info.list_of_versions.join(", "));
+            $("#users_per_version_2").text(version_info.users_per_version.join(", "));
+            $("#random_users_2").html("<br>"+version_info.random_users.join("<br>"));
+
+            links=version_info.links
+            nodes=version_info.nodes
+            update_graph()
+        };
+
+
+
+      $( "#populate_database" ).click(function() {
+          $.getJSON('/_populate_database', 
+            {
+            "num_users_to_create":$('#num_users_to_create').val(),
+            "num_teachers":$('#num_teachers').val(),
+            "version_number":$('#version_number').val()
+            }, 
+            function(version_info) {
+              displayInfo(version_info)
+            });
+            $("#wait").text("Finished populating database");
+          return false;      
+      });
+
+
+      $("#perform_infection").click(function() {
+         $("#wait").text("Please wait, performing limited infection");
+          $.getJSON('/_perform_infection', 
+            {"infection_version":$('#infection_version').val(),
+              "user_id_to_infect":$('#user_id_to_infect').val(),
+              "infection_type":$('input[name=infection_type]:checked').val()
+            }, 
+            function(version_info) {
+              displayInfo(version_info)
+            });
+            $("#wait").text("Finished performing limited infection");
+          return false;      
+      });
+
+
+      $( "#delete_all_entries_from_db" ).click(function() {
+          $.getJSON('/_delete_all_entries_from_db', {
+          }, function(version_info){
+            displayInfo(version_info)
+          });
+          $("#wait").text("Finished deleting");
+          return false;      
+      });
+
+
+      $( "#view_database" ).click(function() {
+          $.getJSON('/_view_database', {
+          }, function(version_info){
+            displayInfo(version_info)
+          });
+          $("#wait").text("Finished querying for data");
+          return false;      
+      });
+
+
+
         $.getJSON('/_view_database', {
         }, function(version_info){
           displayInfo(version_info)
         });
+
     });
-
-
-    $( "#populate_database" ).click(function() {
-        $.getJSON('/_populate_database', 
-          {
-          "num_users_to_create":$('#num_users_to_create').val(),
-          "num_teachers":$('#num_teachers').val(),
-          "version_number":$('#version_number').val()
-          }, 
-          function(version_info) {
-            displayInfo(version_info)
-          });
-          $("#wait").text("Finished populating database");
-        return false;      
-    });
-
-
-    $("#perform_infection").click(function() {
-       $("#wait").text("Please wait, performing limited infection");
-        $.getJSON('/_perform_infection', 
-          {"infection_version":$('#infection_version').val(),
-            "user_id_to_infect":$('#user_id_to_infect').val(),
-            "infection_type":$('input[name=infection_type]:checked').val()
-          }, 
-          function(version_info) {
-            displayInfo(version_info)
-          });
-          $("#wait").text("Finished performing limited infection");
-        return false;      
-    });
-
-
-    $( "#delete_all_entries_from_db" ).click(function() {
-        $.getJSON('/_delete_all_entries_from_db', {
-        }, function(version_info){
-          displayInfo(version_info)
-        });
-        $("#wait").text("Finished deleting");
-        return false;      
-    });
-
-
-    $( "#view_database" ).click(function() {
-        $.getJSON('/_view_database', {
-        }, function(version_info){
-          displayInfo(version_info)
-        });
-        $("#wait").text("Finished querying for data");
-        return false;      
-    });
-
-    function displayInfo(version_info) {
-        $("#total_num_users").text($("#total_num_users_2").text());
-        $("#num_of_distinct_versions").text($("#num_of_distinct_versions_2").text());
-        $("#list_of_versions").text($("#list_of_versions_2").text());
-        $("#users_per_version").text($("#users_per_version_2").text());
-        $("#random_users").html($("#random_users_2").html());
-
-        $("#total_num_users_2").text(version_info.total_num_users);
-        $("#num_of_distinct_versions_2").text(version_info.num_of_distinct_versions);
-        $("#list_of_versions_2").text(version_info.list_of_versions.join(", "));
-        $("#users_per_version_2").text(version_info.users_per_version.join(", "));
-        $("#random_users_2").html("<br>"+version_info.random_users.join("<br>"));        
-    };
-
 
 
     </script>
