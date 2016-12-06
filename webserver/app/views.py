@@ -130,6 +130,7 @@ def perform_infection():
     return jsonify(count_infection_versions())
 
 
+
 def execute_statement(statement):
     cur = g.db.cursor()
     cur.execute(statement)
@@ -145,6 +146,9 @@ def populate_database():
     """
     Called via AJAX from the client side
     Populates database by adding more users according to the numbers requested
+    1. create the total number of uesers, insert into USERS table
+    2. select the teachers (randomly, without replacement from list)
+    3. for each teacher, assign users as students in the enrollments
     """
     print("request.args: ", request.args)
     #parse variables from the ajax request
@@ -153,23 +157,6 @@ def populate_database():
     version_number=request.args.get('version_number', 0, type=str)
     num_users_with_teachers=request.args.get('num_users_with_teachers', 0, type=int)
     num_users_with_teachers=int(num_users_with_teachers)
-    '''
-    1. create the total number of uesers, insert into USERS table
-    2. select the teachers (randomly, without replacement from list)
-    3. for each teacher, associate with each teacher:
-        num_users_to_create * num_teachers_student_can_have/num_teachers, without replacement 
-    conditions to allow:
-    Without replacement:
-        -Allow all students to go with one teacher
-        -If more than one teacher, allow equal number of students per teacher
-            -every teacher will get some students
-
-    With replacement, allowing other teachers 
-        -If more than one teacher:
-        
-        -One first time around, run without replacement to ensure each teacher gets students
-            -On the second time around, makea new set of total num users, including the teachers, and allow teachers to be in the same set
-    '''
     count=0
     cur = g.db.cursor()
     new_users=set()
@@ -189,14 +176,10 @@ def populate_database():
     students_to_add=new_users.copy()
     students_to_add.difference_update(teachers) #remove the teachers that were just sampled out
 
-    #3. Assign students with users uniquely (each user that is not a teacher gets assigned to a teacher)
-    #4. Assign more students to more than one teacher if this was specified        
+    #3. Assign students with users uniquely (each user that is not a teacher gets assigned to a teacher) for the first pass
+    #4. Then, resample and assign again if more than one teacher if this was specified        
     cur = g.db.cursor()
-    loopcount=0
     while num_users_with_teachers>0:
-        print("num_users_with_teachers",num_users_with_teachers)
-        print("loopcount",loopcount)
-        loopcount+=1
         for i,teacher in enumerate(teachers):
             #randomly assign some students
             if i+1==len(teachers):
@@ -214,7 +197,7 @@ def populate_database():
                     statement=make_insert_statement("RELATIONSHIPS", ['teacher_id','student_id'],[teacher,student])
                     cur.execute(statement, [teacher,student]) #the execute statement needs to have the values there
                 except:
-                    print("tried to insert a duplicate")
+                    print("tried to insert a duplicate, ignored")
         if num_users_with_teachers>num_users_to_create-num_teachers:
             num_students_to_add=num_users_to_create-num_teachers
         else:
