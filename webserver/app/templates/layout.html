@@ -113,17 +113,20 @@
         var color = d3.scaleOrdinal(d3.schemeCategory20);
 
 // notes for how to play with force: https://github.com/d3/d3-force
-        var simulation = d3.forceSimulation()
-            .force("link", d3.forceLink().id(function(d) { return d.id; }))
-            .force("charge", d3.forceManyBody().strength(-0.5))
-            .force("center", d3.forceCenter(width / 2, height / 2));
+        var simulation;
 
 
-      var links=[]
-      var nodes=[]
+        var links=[]
+        var nodes=[]
 
         function update_graph(){
           $("#svgid").empty();
+          //not sure why, but it helps to recall this forceSimulation function in here to prevent all the nodes bunching up at the top left corner
+          simulation = d3.forceSimulation()
+                      .force("link", d3.forceLink().id(function(d) { return d.id; }))
+                      .force("charge", d3.forceManyBody().strength(-3))
+                      .force("center", d3.forceCenter(width / 2, height / 2));
+
             var link = svg.append("g")
                   .attr("class", "links")
                 .selectAll("line")
@@ -159,11 +162,6 @@
                     .attr("y1", function(d) { return d.source.y; })
                     .attr("x2", function(d) { return d.target.x; })
                     .attr("y2", function(d) { return d.target.y; });
-
-                // node
-                //     .attr("cx", function(d) { return d.x; })
-                //     .attr("cy", function(d) { return d.y; });
-
                     node
                     .attr("cx", function(d) { return d.x = Math.max(radius, Math.min(width - radius, d.x)); })
                     .attr("cy", function(d) { return d.y = Math.max(radius, Math.min(height - radius, d.y)); });
@@ -235,7 +233,8 @@
             {
             "num_users_to_create":$('#num_users_to_create').val(),
             "num_teachers":$('#num_teachers').val(),
-            "version_number":$('#version_number').val()
+            "version_number":$('#version_number').val(),
+            "num_users_with_teachers":$('#num_users_with_teachers').val()
             }, 
             function(version_info) {
               displayInfo(version_info)

@@ -3,12 +3,84 @@
   <div class="container" >
     <h3 id="myMessage"> Khan Academy Coding Challenge</h3> 
 
-<h5>The top portion of this page shows aggregate information about the users. 
-There are two tables in order to show how the data has changed between actions.
+<h5>
 The lower portion of this page has allows the user to add/delete users and perform infections.</h5>
 
-<svg id="svgid" width="960" height="600" style="border: 1px solid black;"></svg>
 
+<svg id="svgid" width="960" height="600" style="border: 1px solid black;"></svg>
+<br>
+
+      <input type="submit" id="view_database" value="Refresh" onclick="">
+      <div> Status: <span id="wait"></span></div>
+
+</br>
+<h4>Actions</h4>
+
+<h5>Perform Infection</h5>
+      <form>
+        Version number to infect with: <input type="text" id="infection_version" value="1.3">
+        <br>
+        Target User ID to start infection with: <input type="text" id="user_id_to_infect" value="1"> (Obtain userID by hovering over a dot above)<br> 
+        Infection Type:
+         <br>
+          <span>
+            <label>
+            <input type="radio" name="infection_type" value="TOTAL" checked="checked"/>
+            Total Infection: Infects all users that are in the same courses as the targer user, as well as their coursemates, recursively (both teachers and students). Might infect all users, and might take time to run.
+            </label>
+          </span>
+        <br>
+          <span>
+            <label>
+            <input type="radio" name="infection_type" value="LIMITED"/>
+            Limited Infection: Infects all users that are in the same courses as the target user (both teachers and students)  
+            </label>
+          </span>
+        <br>
+        <input type="submit" id="perform_infection" value="Perofrm Limited Infection" onclick="">
+      </form>
+  <br>
+
+<h5>Generate data</h5>
+      <form>
+
+        Total Number of users to generate:
+        <input type="text" id="num_users_to_create" value="100"> <br>
+        Number of teachers:
+        <input type="text" id="num_teachers" value="3"><br>
+        Version number to give every user:
+        <input type="text" id="version_number" value="1.1"><br>
+        Number of users to be have one or more teachers:
+        <input type="text" id="num_users_with_teachers" value="0"> 
+        <ul>
+          <li>Some examples of what this value does:  </li>
+          <ul>
+            <li>If there are 10 users total and 1 teacher: </li>
+              <ul>
+            <li>Setting this value to 0 results in: 1 teacher, 9 students </li>
+            <li>Setting this value to 1 results in: 1 teacher, 9 students, 1 student "enrolled" in the course twice </li>
+            </ul>
+
+              <li>If there are 10 users total and 2 teachers: </li>
+              <ul>
+              <li>Setting this value to 0 results in: 2 teachers, apprixmately 4 unique students per teacher (number of students is randomly determined, but no overlap occurs) </li>
+              <li>Setting this value to 1 results in: 2 teachers, at least 4 unique students per teacher, 1 of the users (might be teacher or student) assigned to teacher again </li>
+              <li>Setting this value to 10 results in: 2 teachers, at least 4 unique students per teacher, then 5
+            </ul>
+          </ul>
+        </ul>
+        <br><input type="submit" id="populate_database" value="Insert into Database" onclick="">
+      </form>
+      
+      <br>
+<h5>Delete all entries</h5>   
+      <input type="submit" id="delete_all_entries_from_db" value="Delete All Entries from Database" onclick="">
+      <br>
+
+<br>
+
+
+<h4>There are two tables here in order to show how the data has changed between actions.</h4>
     <h5>Aggregate user information as a result of most recent query</h5>
       <table border="1">
         <tr>
@@ -62,52 +134,7 @@ The lower portion of this page has allows the user to add/delete users and perfo
       </table>
      
      </br>
-      <input type="submit" id="view_database" value="Refresh" onclick="">
-      <div> Status: <span id="wait"></span></div>
 
-</br>
-<h4>Actions</h4>
-<h5>Generate data</h5>
-      <form>
-
-        Total Number of users to generate:
-        <input type="text" id="num_users_to_create" value="100"> <br>
-        Number of teachers:
-        <input type="text" id="num_teachers" value="3"><br>
-        Version number to give every user:
-        <input type="text" id="version_number" value="1.1"><br>        
-        <input type="submit" id="populate_database" value="Insert into Database" onclick="">
-      </form>
-      
-
-<h5>Perform Infection</h5>
-      <form>
-        Version number to infect with: <input type="text" id="infection_version" value="1.3">
-        User ID to start infection with: <input type="text" id="user_id_to_infect" value="1"> (Probably easiest way is to copy/paste a random example user_id from above)<br> 
-        Infection Type:
-         <br>
-          <span>
-            <label>
-            <input type="radio" name="infection_type" value="TOTAL" checked="checked"/>
-            Total Infection: All users that are in the same courses as the user to infect, as well as their coursemates, recursively (both teachers and students). Might infect all users, and might take time to run.
-            </label>
-          </span>
-        <br>
-          <span>
-            <label>
-            <input type="radio" name="infection_type" value="LIMITED"/>
-            Limited Infection: All users that are in the same courses as the user to infect (both teachers and students)  
-            </label>
-          </span>
-        <br>
-        <input type="submit" id="perform_infection" value="Perofrm Limited Infection" onclick="">
-      </form>
-  <br>
-
-
-<h5>Delete all entries</h5>   
-      <input type="submit" id="delete_all_entries_from_db" value="Delete All Entries from Database" onclick="">
-      <br>
 
   </div>
 

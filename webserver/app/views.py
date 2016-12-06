@@ -10,7 +10,7 @@ from app import app
 import random
 import string
 import pdb
-
+import math
 DATABASE = '../ka_challenge.db' #assuming we are running from coding_challenge/webserver/run.py, and ka_challenge.db is at coding_challenge/users.db
 
 
@@ -41,7 +41,7 @@ def count_infection_versions():
     nodes=[{'id': item[0], 'group':item[1]} for item in all_users]
     all_relationships = g.db.execute("SELECT * FROM RELATIONSHIPS;").fetchall()
     links=[{"source":item[0], "target":item[1],"value":1} for item in all_relationships]
-    #pdb.set_trace()
+
 
     users_per_version=[]
     for version in list_of_versions: #added comment: O(N*N) total depending on how many versions there are
@@ -151,13 +151,13 @@ def populate_database():
     num_users_to_create=request.args.get('num_users_to_create', 0, type=int)
     num_teachers=request.args.get('num_teachers', 0, type=int)
     version_number=request.args.get('version_number', 0, type=str)
-
+    num_users_with_teachers=request.args.get('num_users_with_teachers', 0, type=int)
+    num_users_with_teachers=int(num_users_with_teachers)
     '''
     1. create the total number of uesers, insert into USERS table
     2. select the teachers (randomly, without replacement from list)
     3. for each teacher, associate with each teacher:
         num_users_to_create * num_teachers_student_can_have/num_teachers, without replacement 
-    
     conditions to allow:
     Without replacement:
         -Allow all students to go with one teacher
@@ -172,33 +172,56 @@ def populate_database():
     '''
     count=0
     cur = g.db.cursor()
-    newly_added=set()
+    new_users=set()
+    #1. create users
     while count < num_users_to_create:
         userName=random.choice(string.ascii_letters[26::])+random.choice(['a','e','i','o','u','y'])+random.choice(string.ascii_letters[0:26])+random.choice(string.ascii_letters[0:26])+random.choice(['a','e','i','o','u','y'])
         statement = make_insert_statement("USERS", ['name','version'], [userName,version_number])
         count+=1
         cur.execute(statement, [userName,version_number]) #the execute statement needs to have the values there
         last_row=cur.lastrowid
-        newly_added.add(last_row)
+        new_users.add(last_row)
     g.db.commit()
     cur.close()
-    # pdb.set_trace()
-    teachers=random.sample(newly_added,num_teachers)
-    newly_added.difference_update(teachers) #remove the teachers that were just sampled out
-    avg_num_stuents_per_teacher=num_users_to_create//len(teachers)
+
+    #2. Designate users as teachers
+    teachers=random.sample(new_users,num_teachers)
+    students_to_add=new_users.copy()
+    students_to_add.difference_update(teachers) #remove the teachers that were just sampled out
+
+    #3. Assign students with users uniquely (each user that is not a teacher gets assigned to a teacher)
+    #4. Assign more students to more than one teacher if this was specified        
     cur = g.db.cursor()
-    for i,teacher in enumerate(teachers):
-        #randomly assign some students
-        if i+1==len(teachers):
-            students=newly_added #add all remaining number of students
+    loopcount=0
+    while num_users_with_teachers>0:
+        print("num_users_with_teachers",num_users_with_teachers)
+        print("loopcount",loopcount)
+        loopcount+=1
+        for i,teacher in enumerate(teachers):
+            #randomly assign some students
+            if i+1==len(teachers):
+                students=students_to_add #add all remaining number of students
+            else:
+                if num_users_with_teachers > len(students_to_add):
+                    avg_num_students_per_teacher=len(students_to_add)//len(teachers)
+                else:
+                    avg_num_students_per_teacher=num_users_with_teachers//len(teachers)
+                random_num_students_to_assign=random.randint(math.ceil(avg_num_students_per_teacher-0.3*avg_num_students_per_teacher),math.ceil(avg_num_students_per_teacher+0.3*avg_num_students_per_teacher))
+                students=random.sample(students_to_add,random_num_students_to_assign)
+                students_to_add.difference_update(students)
+            for student in students:
+                try:
+                    statement=make_insert_statement("RELATIONSHIPS", ['teacher_id','student_id'],[teacher,student])
+                    cur.execute(statement, [teacher,student]) #the execute statement needs to have the values there
+                except:
+                    print("tried to insert a duplicate")
+        if num_users_with_teachers>num_users_to_create-num_teachers:
+            num_students_to_add=num_users_to_create-num_teachers
         else:
-            students=random.sample(newly_added, random.randint(int(avg_num_stuents_per_teacher-0.3*len(newly_added)),int(avg_num_stuents_per_teacher+0.3*len(newly_added))))
-            newly_added.difference_update(students)
-        for student in students:
-            print("students", students)
-            statement=make_insert_statement("RELATIONSHIPS", ['teacher_id','student_id'],[teacher,student])
-            cur.execute(statement, [teacher,student]) #the execute statement needs to have the values there
-    g.db.commit()
+            num_students_to_add=num_users_with_teachers   
+        num_users_with_teachers-=num_students_to_add
+        students_to_add=set(random.sample(new_users, num_users_with_teachers))
+        g.db.commit()
     cur.close()
     return jsonify(count_infection_versions())
 
