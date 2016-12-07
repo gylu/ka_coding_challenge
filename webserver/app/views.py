@@ -11,7 +11,7 @@ import random
 import string
 import pdb
 import math
-DATABASE = '../ka_challenge.db' #assuming we are running from coding_challenge/webserver/run.py, and ka_challenge.db is at coding_challenge/users.db
+DATABASE = '../ka_challenge.db' #assuming we are running from khan_coding_challenge/webserver/run.py, and ka_challenge.db is at khan_coding_challenge/ka_challenge.db
 
 
 
@@ -31,18 +31,18 @@ def view_database():
 
 def count_infection_versions():
     """
-    Helper function response to an AJAX call to perform some queries
+    Helper function response to an AJAX call to query the data and return to front end
     """
-    total_num_users = g.db.execute("SELECT count(*) FROM USERS;").fetchall() #added comment: O(N) or O(1)
-    num_of_distinct_versions = g.db.execute("SELECT count(distinct(version)) FROM users").fetchall()[0][0] #added comment: O(N)
-    list_of_versions = [version_item[0] for version_item in g.db.execute("SELECT distinct(version) FROM users").fetchall()] #because the query returns with: [(1.1,), (1,)]. #added comment: O(N)
-    random_users = g.db.execute("SELECT * FROM USERS ORDER BY RANDOM() LIMIT 5;").fetchall() ##added comment: O(1)
+    total_num_users = g.db.execute("SELECT count(*) FROM USERS;").fetchall() #Expected runtime O(N) or O(1)
+    num_of_distinct_versions = g.db.execute("SELECT count(distinct(version)) FROM users").fetchall()[0][0] # O(N)
+    list_of_versions = [version_item[0] for version_item in g.db.execute("SELECT distinct(version) FROM users").fetchall()] #because the query returns with: [(1.1,), (1,)]. O(N)
+    random_users = g.db.execute("SELECT * FROM USERS ORDER BY RANDOM() LIMIT 5;").fetchall() # O(1), gets 5 random users
     all_users = g.db.execute("SELECT user_id, version FROM USERS;").fetchall() #O(1) runtime?
     nodes=[{'id': item[0], 'group':item[1]} for item in all_users]
     all_relationships = g.db.execute("SELECT * FROM RELATIONSHIPS;").fetchall()
     links=[{"source":item[0], "target":item[1],"value":1} for item in all_relationships]
     users_per_version=[]
-    for version in list_of_versions: #added comment: O(N*N) total depending on how many versions there are
+    for version in list_of_versions: #O(N*N) total depending on how many versions there are
         users_per_version.append(g.db.execute("SELECT count(*) FROM users where version="+str(version)).fetchall()[0][0]) #this is O(N) because I don't have index.
     versions_info={"nodes":nodes,"links":links,"total_num_users":total_num_users,"num_of_distinct_versions":num_of_distinct_versions, "list_of_versions":list_of_versions, "users_per_version":users_per_version, "random_users":random_users}
     return versions_info
@@ -53,8 +53,7 @@ def count_infection_versions():
 def delete_all_entries_from_db():
     """
     Called via AJAX from the client side    
-    Deletes all entries from all tables
-    Does not delete the tables
+    Deletes all entries from all tables. Does not delete the tables
     """
     cur = g.db.cursor()
     statement = 'Delete FROM RELATIONSHIPS;'
@@ -149,32 +148,23 @@ def perform_infection():
 
 
 
-def execute_statement(statement):
-    cur = g.db.cursor()
-    cur.execute(statement)
-    g.db.commit()
-    last_row_id = cur.lastrowid
-    cur.close()
-    return last_row_id
-
-
 
 @app.route('/_populate_database')
 def populate_database():
     """
     Called via AJAX from the client side
     Populates database by adding more users according to the numbers requested
-    1. create the total number of uesers, insert into USERS table
-    2. select the teachers (randomly, without replacement from list)
-    3. for each teacher, assign users as students in the enrollments
+    1. create the total number of users, insert into USERS table
+    2. Designate some users as teachers (randomly, without replacement from list)
+    3. Generate the desired number of teacher-to-student relationships, insert into RELATIONSHIPS table
+       Resample and assign again if there are more teacher-to-student relationships than there are (num_users_to_create minus num_teachers)
     """
     print("request.args: ", request.args)
     #parse variables from the ajax request
     num_users_to_create=request.args.get('num_users_to_create', 0, type=int)
     num_teachers=request.args.get('num_teachers', 0, type=int)
     version_number=request.args.get('version_number', 0, type=str)
-    num_users_with_teachers=request.args.get('num_users_with_teachers', 0, type=int)
-    num_users_with_teachers=int(num_users_with_teachers)
+    num_teacher_student_relationships_to_make=int(request.args.get('num_teacher_student_relationships_to_make', 0, type=int))
     count=0
     cur = g.db.cursor()
     new_users=set()
@@ -188,22 +178,23 @@ def populate_database():
         new_users.add(last_row)
     g.db.commit()
     cur.close()
-    #2. Designate users as teachers
+
+    #2. Designate some users as teachers
     teachers=random.sample(new_users,num_teachers)
     students_to_add=new_users.copy()
     students_to_add.difference_update(teachers) #remove the teachers that were just sampled out
-    if num_users_with_teachers <= num_users_to_create-num_teachers:
-        students_to_add=set(random.sample(students_to_add,num_users_with_teachers))
+    #Condition for handling if there are less teacher-to-student relationships to be created than there are number of users
+    if num_teacher_student_relationships_to_make <= num_users_to_create-num_teachers:
+        students_to_add=set(random.sample(students_to_add,num_teacher_student_relationships_to_make))
     num_students_to_add=len(students_to_add)
 
-    #3. Assign students with users uniquely (each user that is not a teacher gets assigned to a teacher) for the first pass
-    #4. Then, resample and assign again if more than one teacher if this was specified        
+    #3. Generate the desired number of teacher-to-student relationships, insert into RELATIONSHIPS table (each user that is not a teacher gets assigned to a teacher) for the first pass    
     cur = g.db.cursor()
-    while num_users_with_teachers>0:
+    pdb.set_trace()
+    while num_teacher_student_relationships_to_make>0:
         for i,teacher in enumerate(teachers):
-            #randomly assign some students
-            if i+1==len(teachers):
-                students=students_to_add #add all remaining number of students
+            if i+1==len(teachers):             
+                students=students_to_add #If there is only 1 teacher left, randomly assign the remaining students
             else:
                 avg_num_students_per_teacher=num_students_to_add//num_teachers
                 random_num_students_to_assign=random.randint(math.ceil(avg_num_students_per_teacher-0.2*avg_num_students_per_teacher),math.ceil(avg_num_students_per_teacher+0.2*avg_num_students_per_teacher))
@@ -215,25 +206,33 @@ def populate_database():
                     cur.execute(statement, [teacher,student]) #the execute statement needs to have the values there
                 except:
                     print("tried to insert a duplicate, ignored")
-        num_users_with_teachers-=num_students_to_add
-        if num_users_with_teachers>num_users_to_create-num_teachers:
+        #Resample and perform more teacher-to-stduent assignments if there are more teacher-to-student relationships than there are (num_users_to_create minus num_teachers)
+        num_teacher_student_relationships_to_make-=num_students_to_add
+        if num_teacher_student_relationships_to_make>num_users_to_create-num_teachers:
             num_students_to_add=num_users_to_create-num_teachers
-            print("num_students_to_add 1",num_students_to_add)
         else:
-            num_students_to_add=num_users_with_teachers
-            print("num_students_to_add 2",num_students_to_add)
-        print("num_users_with_teachers",num_users_with_teachers) 
+            num_students_to_add=num_teacher_student_relationships_to_make
         students_to_add=set(random.sample(new_users, num_students_to_add))
         g.db.commit()
     cur.close()
     return jsonify(count_infection_versions())
 
 
+def execute_statement(statement):
+    """
+    Helper function to execute sql statements
+    """
+    cur = g.db.cursor()
+    cur.execute(statement)
+    g.db.commit()
+    last_row_id = cur.lastrowid
+    cur.close()
+    return last_row_id
 
 
 def make_insert_statement(table, fields=(), values=()):
     """
-    Generates SQL statements
+    Helper function to generate and format sql statements
     """
     statement = 'INSERT INTO %s (%s) VALUES (%s)' % (
         table,

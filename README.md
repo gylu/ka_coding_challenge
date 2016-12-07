@@ -112,13 +112,13 @@ For this coding challenege, using an actual database seems to be a more realisti
 
 
 
-## Testing:
+## Testing
 Didn't have time for unit testing or integrated testing. Instead, I developed a web UI, that was used for visual inspection, as beta testing.
 
 ## Optimizations and updates that could have been made:
 Could have done a recursive query instead of the wierd thing I did that mixed python and sql
 
-## Potential questions that could use more thinking
+## Potential questions that could use more consideration
 What are some other SQL queries that I can run?
 
 How do you check if two users are in the same course?
@@ -128,7 +128,7 @@ How do you check if two users are in the same course?
 ## SQLITE indexes:
 https://www.tutorialspoint.com/sqlite/sqlite_indexes.htm
 
-## Run time of SQLITE Queries:
+## Run time of SQLITE Queries
 https://www.sqlite.org/queryplanner.html
 SQLITE full table Scan = O(N)
 Lookup by RowID = O(logN)
@@ -138,13 +138,13 @@ After creating an Index, SQL lite will do 2 binary searches.
 First one on the indexed column, eg to get username to rowID,
 then a second search to find that rowID
 
-## Primary key vs index:
+## Primary key vs index:=
 - Need to have one primary key (primary key = for uniqueness)
 - Can have many indexes (index= for uniqueness and for performance)
 http://stackoverflow.com/questions/2878272/when-i-should-use-primary-key-or-index
 
 
-## Some Big O runtimes:
+## Some Big O runtimes
 http://stackoverflow.com/questions/1347552/what-is-the-big-o-for-sql-select
 Merge join vs hash join:
 http://stackoverflow.com/questions/2065754/is-there-any-general-rule-on-sql-query-complexity-vs-performance
