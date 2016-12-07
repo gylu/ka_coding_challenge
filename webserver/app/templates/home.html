@@ -3,8 +3,7 @@
   <div class="container" >
     <h3 id="myMessage"> Khan Academy Coding Challenge</h3> 
 
-<h5>
-The lower portion of this page has allows the user to add/delete users and perform infections.</h5>
+<a href="https://github.com/gylu/khan_coding_challenge">https://github.com/gylu/khan_coding_challenge</a>
 
 
 <svg id="svgid" width="960" height="600" style="border: 1px solid black;"></svg>
@@ -46,29 +45,12 @@ The lower portion of this page has allows the user to add/delete users and perfo
 
         Total Number of users to generate:
         <input type="text" id="num_users_to_create" value="100"> <br>
-        Number of teachers:
+        Number of teachers amongst them:
         <input type="text" id="num_teachers" value="3"><br>
         Version number to give every user:
         <input type="text" id="version_number" value="1.1"><br>
-        Number of users to be have one or more teachers:
+        Number of teacher-to-user assignments to make:
         <input type="text" id="num_users_with_teachers" value="98"> 
-        <ul>
-          <li>Some examples of what this value does:  </li>
-          <ul>
-            <li>If there are 10 users total and 1 teacher: </li>
-              <ul>
-            <li>Setting this value to 0 results in: 1 teacher, 9 students </li>
-            <li>Setting this value to 1 results in: 1 teacher, 9 students, 1 student "enrolled" in the course twice </li>
-            </ul>
-
-              <li>If there are 10 users total and 2 teachers: </li>
-              <ul>
-              <li>Setting this value to 0 results in: 2 teachers, apprixmately 4 unique students per teacher (number of students is randomly determined, but no overlap occurs) </li>
-              <li>Setting this value to 1 results in: 2 teachers, at least 4 unique students per teacher, 1 of the users (might be teacher or student) assigned to teacher again </li>
-              <li>Setting this value to 10 results in: 2 teachers, at least 4 unique students per teacher, then 5
-            </ul>
-          </ul>
-        </ul>
         <br><input type="submit" id="populate_database" value="Insert into Database" onclick="">
       </form>
       
@@ -80,7 +62,8 @@ The lower portion of this page has allows the user to add/delete users and perfo
 <br>
 
 
-<h4>There are two tables here in order to show how the data has changed between actions.</h4>
+<h4>User information summary</h4>
+<h5>There are two tables here in order to show how the data has changed between actions.</h5>
     <h5>Aggregate user information as a result of most recent query</h5>
       <table border="1">
         <tr>
