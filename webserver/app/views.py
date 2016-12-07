@@ -41,13 +41,10 @@ def count_infection_versions():
     nodes=[{'id': item[0], 'group':item[1]} for item in all_users]
     all_relationships = g.db.execute("SELECT * FROM RELATIONSHIPS;").fetchall()
     links=[{"source":item[0], "target":item[1],"value":1} for item in all_relationships]
-
-
     users_per_version=[]
     for version in list_of_versions: #added comment: O(N*N) total depending on how many versions there are
         users_per_version.append(g.db.execute("SELECT count(*) FROM users where version="+str(version)).fetchall()[0][0]) #this is O(N) because I don't have index.
     versions_info={"nodes":nodes,"links":links,"total_num_users":total_num_users,"num_of_distinct_versions":num_of_distinct_versions, "list_of_versions":list_of_versions, "users_per_version":users_per_version, "random_users":random_users}
-    #print("versions_info:",versions_info)
     return versions_info
 
 
@@ -191,11 +188,13 @@ def populate_database():
         new_users.add(last_row)
     g.db.commit()
     cur.close()
-
     #2. Designate users as teachers
     teachers=random.sample(new_users,num_teachers)
     students_to_add=new_users.copy()
     students_to_add.difference_update(teachers) #remove the teachers that were just sampled out
+    if num_users_with_teachers <= num_users_to_create-num_teachers:
+        students_to_add=set(random.sample(students_to_add,num_users_with_teachers))
+    num_students_to_add=len(students_to_add)
 
     #3. Assign students with users uniquely (each user that is not a teacher gets assigned to a teacher) for the first pass
     #4. Then, resample and assign again if more than one teacher if this was specified        
@@ -206,11 +205,8 @@ def populate_database():
             if i+1==len(teachers):
                 students=students_to_add #add all remaining number of students
             else:
-                if num_users_with_teachers > len(students_to_add):
-                    avg_num_students_per_teacher=len(students_to_add)//len(teachers)
-                else:
-                    avg_num_students_per_teacher=num_users_with_teachers//len(teachers)
-                random_num_students_to_assign=random.randint(math.ceil(avg_num_students_per_teacher-0.3*avg_num_students_per_teacher),math.ceil(avg_num_students_per_teacher+0.3*avg_num_students_per_teacher))
+                avg_num_students_per_teacher=num_students_to_add//num_teachers
+                random_num_students_to_assign=random.randint(math.ceil(avg_num_students_per_teacher-0.2*avg_num_students_per_teacher),math.ceil(avg_num_students_per_teacher+0.2*avg_num_students_per_teacher))
                 students=random.sample(students_to_add,random_num_students_to_assign)
                 students_to_add.difference_update(students)
             for student in students:
@@ -219,50 +215,20 @@ def populate_database():
                     cur.execute(statement, [teacher,student]) #the execute statement needs to have the values there
                 except:
                     print("tried to insert a duplicate, ignored")
+        num_users_with_teachers-=num_students_to_add
         if num_users_with_teachers>num_users_to_create-num_teachers:
             num_students_to_add=num_users_to_create-num_teachers
+            print("num_students_to_add 1",num_students_to_add)
         else:
-            num_students_to_add=num_users_with_teachers   
-        num_users_with_teachers-=num_students_to_add
-        students_to_add=set(random.sample(new_users, num_users_with_teachers))
+            num_students_to_add=num_users_with_teachers
+            print("num_students_to_add 2",num_students_to_add)
+        print("num_users_with_teachers",num_users_with_teachers) 
+        students_to_add=set(random.sample(new_users, num_students_to_add))
         g.db.commit()
     cur.close()
     return jsonify(count_infection_versions())
 
 
-
-    # num_users_to_create=request.args.get('num_users_to_create', 0, type=int)
-    # max_num_courses_user_can_be_in=request.args.get('max_num_courses_user_can_be_in', 0, type=int)
-    # total_num_courses=request.args.get('total_num_courses', 0, type=int)
-    # students_per_teacher=request.args.get('students_per_teacher', 0, type=int)
-    # version_number=request.args.get('version_number', 0, type=str)
-    #course_ids will be incremental, starting from 1
-    #old stuff, now commented out
-
-    # list_possible_courses=[num for num in range(1,total_num_courses+1)]
-    # count=0
-    # cur = g.db.cursor()
-    # while count < num_users_to_create:
-    #     userName=random.choice(string.ascii_letters[26::])+random.choice(['a','e','i','o','u','y'])+random.choice(string.ascii_letters[0:26])+random.choice(string.ascii_letters[0:26])+random.choice(['a','e','i','o','u','y'])
-    #     statement = make_insert_statement("USERS", ['name','version'], [userName,version_number])
-    #     count+=1
-    #     cur.execute(statement, [userName,version_number]) #the execute statement needs to have the values there
-    #     user_id_just_created = cur.lastrowid
-    #     #randomly determine how many courses this user will be in, from 1 to the max_num_courses_user_can_be_in
-    #     number_of_courses_user_enrolled_in = random.choice(range(1,max_num_courses_user_can_be_in+1))
-    #     courses_user_enrolled_in = random.sample(list_possible_courses,number_of_courses_user_enrolled_in) #samples without replacement
-    #     #for each course, randomly determine user's role. 1 of 20 becomes teacher
-    #     for course_id in courses_user_enrolled_in:
-    #         if random.randrange(students_per_teacher) == 1:
-    #             role='TEACHER'
-    #         else:
-    #             role='STUDENT'
-    #         values=[course_id,user_id_just_created,role]
-    #         statement = make_insert_statement("ENROLLMENTS", ['course_id','user_id', 'user_role'], values)
-    #         cur.execute(statement,values)
-    # g.db.commit()
-    # cur.close()
-    # return jsonify(count_infection_versions())
 
 
 def make_insert_statement(table, fields=(), values=()):

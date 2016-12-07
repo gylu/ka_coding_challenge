@@ -109,7 +109,7 @@
         var svg = d3.select("svg")
         var width = +svg.attr("width"),
             height = +svg.attr("height"),
-            radius=10;
+            radius=5;
         var color = d3.scaleOrdinal(d3.schemeCategory10);
 
 // notes for how to play with force: https://github.com/d3/d3-force
@@ -121,7 +121,7 @@
 
         function update_graph(){
           $("#svgid").empty();
-          //not sure why, but it helps to recall this forceSimulation function in here to prevent all the nodes bunching up at the top left corner
+          //calling this forceSimulation function in here prevents all the nodes bunching up at the top left corner
           simulation = d3.forceSimulation()
                       .force("link", d3.forceLink().id(function(d) { return d.id; }))
                       .force("charge", d3.forceManyBody().strength(-2))
@@ -133,6 +133,7 @@
                 .data(links)
                 .enter().append("line")
                   .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
+
 
               var node = svg.append("g")
                   .attr("class", "nodes")

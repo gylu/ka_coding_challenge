@@ -2,7 +2,7 @@
 .mode column
 .timer on
 
-#to create a database
+#to create a database:
 #$ sqlite3 ka_challenge.db
 
 DROP TABLE USERS;
@@ -29,7 +29,13 @@ CREATE TABLE RELATIONSHIPS(
 
 
 
+
+
+###################################################
 ######### previous stuff not using anymore ########
+###################################################
+###################################################
+
 #previous way of modeling data
 DROP TABLE ENROLLMENTS;
 Delete FROM ENROLLMENTS;
