@@ -82,47 +82,68 @@ def perform_infection():
     # 2. infect all of these classmates
     # 3. repeat step 1 for each of these classmates
     """        
-    print("Running limited infection")
     infection_version=request.args.get('infection_version', 0, type=str)
     user_id_to_infect=request.args.get('user_id_to_infect', 0, type=str)
     infection_type=request.args.get('infection_type', 0, type=str)
     print("infection_version:", infection_version)
     print("user_id_to_infect:", user_id_to_infect)
     print("infection_type:", infection_type)
-    #ALL_RELATIONS_RECUR, ALL_RELATIONS, SAME_COURSE_ONLY
+    #
     if infection_type=='LIMITED': #this loop is most likely O(N^2), or O(NlogN) to go through an indexed version of this
-        statement='update users set version='+infection_version+' where user_id in (select user_id from ENROLLMENTS where course_id in (select course_id from ENROLLMENTS where user_id='+user_id_to_infect+'))'
+        #get all classes that this user is in
+        subquery=( 
+            'select student_id as user_id from '
+                'RELATIONSHIPS '
+                'where teacher_id=' +user_id_to_infect+ ' '
+                'or teacher_id in '
+                '(select teacher_id from '
+                    'RELATIONSHIPS where student_id='+user_id_to_infect+') '
+            'UNION '
+            'select teacher_id as user_id from '
+                'RELATIONSHIPS where student_id='+user_id_to_infect+' '
+        )
+        print("subquery: ",subquery)
+        statement=(
+            'update users set version='+infection_version+' '
+                'where user_id='+user_id_to_infect+' '
+                'or user_id in '
+                 +'('+subquery+');'
+        )             
         execute_statement(statement)
-    #this gets all the users in the same courses as user_id_to_infect and infect them, then repeat for those users
+    # this gets all the users in the same courses as user_id_to_infect and infect them, then repeat for those users
     elif infection_type=='TOTAL':
         users_to_infect=set()
         users_to_infect.add(user_id_to_infect)
         while users_to_infect: #This whole loop is O(N^2 log N)
             user_id_to_infect_in_loop=str(users_to_infect.pop())
             print("user_id_to_infect_in_loop: ", user_id_to_infect_in_loop)
-            print("infection_version: ", infection_version)
-            query=( #this query is O(NlogN). This query gets all the users that have the same course as the target user
+            subquery=( 
                 'select u1.user_id from '
-                'ENROLLMENTS e1 '
+                    '(select r1.student_id as user_id from '
+                        'RELATIONSHIPS r1 '
+                        'where r1.teacher_id=' +user_id_to_infect_in_loop+ ' '
+                        'or r1.teacher_id in '
+                        '(select teacher_id from '
+                            'RELATIONSHIPS where student_id='+user_id_to_infect_in_loop+') '
+                    'UNION '
+                    'select teacher_id as user_id from '
+                        'RELATIONSHIPS where student_id='+user_id_to_infect_in_loop+') as q1 '
                 'join users u1 '
-                'on u1.user_id=e1.user_id '
-                'where u1.version<>'+infection_version+' ' #this prevents looping
-                'and e1.course_id in '
-                '(select e2.course_id from '
-                    'ENROLLMENTS e2 where e2.user_id='+user_id_to_infect_in_loop+')'
+                    'on u1.user_id=q1.user_id '
+                    'where u1.version<>'+infection_version+' '
             )
-            print("query: ",query)
+            print("subquery: ",subquery)
             # 1. query to get all classmates
-            more_users=g.db.execute(query).fetchall()
+            more_users=g.db.execute(subquery+';').fetchall()
             print("more_users: ", more_users)
+            # pdb.set_trace()
             for new_user_to_add in more_users:
                 # 3. repeating step 1 for each of these classmates
-                users_to_infect.add(new_user_to_add[0]) #new_user_to_add is of the form (user_id,name,version,)  - has a comma at the end for some reason
-
+                users_to_infect.add(new_user_to_add[0]) #new_user_to_add is of the form (user_id,)  - has a comma at the end for some reason
             statement=(
                 'update users set version='+infection_version+' '
                 'where user_id in '
-                 +'('+query+');'
+                 +'('+subquery+');'
             )
             print("statement: ", statement)
             # 2. infect all of these classmates

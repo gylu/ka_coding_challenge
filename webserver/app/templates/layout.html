@@ -167,7 +167,7 @@
                     .attr("cy", function(d) { return d.y = Math.max(radius, Math.min(height - radius, d.y)); });
               }
 
-
+              $(".legend").empty()
               var legend = svg.selectAll(".legend")
               .data(color.domain())
               .enter().append("g")
@@ -277,7 +277,6 @@
           $("#wait").text("Finished querying for data");
           return false;      
       });
-
 
 
         $.getJSON('/_view_database', {
