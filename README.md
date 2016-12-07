@@ -1,10 +1,12 @@
 # Khan Academy Coding Challenge
-https://www.google.com/url?hl=en&q=https://docs.google.com/a/khanacademy.org/document/d/1NiKv-MjULOFyyc8f5w8R_EqvuPJ10wJVJgZhtTK9VKc/edit%23heading%3Dh.24vvz52659j3&source=gmail&ust=1478512420209000&usg=AFQjCNGx71bFvo6iXMb-B2c51_OlH4mJLw
+
 
 # How to run
-First navigate to khan_coding_challenge/webserver, then run in the console:
+1. Navigate to khan_coding_challenge/webserver
+2. Then run in the console:
+''''
 $ python3 run.py
-
+''''
 Then open up a web browser and navigate to: http://0.0.0.0:1024/
 
 The entire logic is in the file: khan_coding_challenge/webserver/app/views.py
@@ -22,6 +24,8 @@ The entire logic is in the file: khan_coding_challenge/webserver/app/views.py
  	- Infections are transferred by both the “coaches” and “is coached by” relations
  2. perform_infection
 
+Original description of problem
+https://www.google.com/url?hl=en&q=https://docs.google.com/a/khanacademy.org/document/d/1NiKv-MjULOFyyc8f5w8R_EqvuPJ10wJVJgZhtTK9VKc/edit%23heading%3Dh.24vvz52659j3&source=gmail&ust=1478512420209000&usg=AFQjCNGx71bFvo6iXMb-B2c51_OlH4mJLw
 
 # Solution:
 Treat problem as a sql problem:
