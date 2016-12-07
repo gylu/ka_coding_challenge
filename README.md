@@ -10,7 +10,7 @@
 The entire logic is in the file: ```khan_coding_challenge/webserver/app/views.py```
 
 
-# Requirements (as imposed by challenge):
+# Requirements (as imposed by challenge)
 1. Model the user 
 	- Have version attribute
 	- Capture the coaching relationship
@@ -28,11 +28,10 @@ The entire logic is in the file: ```khan_coding_challenge/webserver/app/views.py
 Original description of problem
 https://www.google.com/url?hl=en&q=https://docs.google.com/a/khanacademy.org/document/d/1NiKv-MjULOFyyc8f5w8R_EqvuPJ10wJVJgZhtTK9VKc/edit%23heading%3Dh.24vvz52659j3&source=gmail&ust=1478512420209000&usg=AFQjCNGx71bFvo6iXMb-B2c51_OlH4mJLw
 
-# Solution:
-Treat problem as a sql problem:
-* A user will be a row in a database
+# Solution
+Treat problem as a sql problem, therefore each user will be a row in a database
 
-# Web framework used:
+# Web framework used
 Flask (I already have some familiarty with flask, where as Django would be too heavyweight, Webapp2 is not as popular)
 
 
@@ -54,7 +53,7 @@ CREATE TABLE RELATIONSHIPS(
 );
 ```
 
-# Database considerations:
+# Database considerations
 * I am going to use SQLITE. Most linux machines come pre-installed with sqllite. SQLite's main drawback is that it can't do concurrent writes and only runs on one machine, but that is acceptable for this project.
 * For a more capable database in the future, maybe MySQL or Postgres: http://stackoverflow.com/questions/4813890/sqlite-or-mysql-how-to-decide
 * Postgres is more SQL standard adhereing than MySQL, more capable that sqlite.
@@ -121,10 +120,11 @@ Could have done a recursive query instead of the wierd thing I did that mixed py
 
 ## Potential questions that could use more thinking
 What are some other SQL queries that I can run?
+
 How do you check if two users are in the same course?
 
 
-# Background on SQLITE indicies and run times
+# Notes on SQLITE indicies and run times
 ## SQLITE indexes:
 https://www.tutorialspoint.com/sqlite/sqlite_indexes.htm
 
@@ -139,8 +139,8 @@ First one on the indexed column, eg to get username to rowID,
 then a second search to find that rowID
 
 ## Primary key vs index:
--need to have one primary key (primary key = for uniqueness)
--can have many indexes (index= for uniqueness and for performance)
+- Need to have one primary key (primary key = for uniqueness)
+- Can have many indexes (index= for uniqueness and for performance)
 http://stackoverflow.com/questions/2878272/when-i-should-use-primary-key-or-index
 
 
