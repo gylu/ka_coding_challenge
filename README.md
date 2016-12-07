@@ -2,14 +2,12 @@
 
 
 # How to run
-1. Navigate to khan_coding_challenge/webserver
-2. Then run in the console:
-```
-$ python3 run.py
-```
-Then open up a web browser and navigate to: http://0.0.0.0:1024/
+1. Clone or download all contents of this repo, including the .db file
+2. Navigate to ```khan_coding_challenge/webserver ```
+3. Then run in the console: ``` $ python3 run.py ```
+4. Then open up a web browser and navigate to: http://0.0.0.0:1024/
 
-The entire logic is in the file: khan_coding_challenge/webserver/app/views.py
+The entire logic is in the file: ```khan_coding_challenge/webserver/app/views.py```
 
 
 # Requirements (as imposed by challenge):
