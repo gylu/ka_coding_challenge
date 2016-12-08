@@ -12,7 +12,7 @@
 The entire logic is in the file: ```khan_coding_challenge/webserver/app/views.py```
 
 
-# Requirements (as imposed by challenge)
+# Requirements as imposed by challenge
 1. Model the user 
 	- Have version attribute
 	- Capture the coaching relationship
@@ -34,8 +34,7 @@ https://www.google.com/url?hl=en&q=https://docs.google.com/a/khanacademy.org/doc
 Treat problem as a sql problem, therefore each user will be a row in a database
 
 # Web framework used
-Flask (I already have some familiarty with flask, where as Django would be too heavyweight, Webapp2 is not as popular)
-
+Flask - I already have some familiarty with flask, where as Django would be too heavyweight, and Webapp2 does not have a large user base
 
 # Database Design
 Schema:
@@ -56,7 +55,7 @@ CREATE TABLE RELATIONSHIPS(
 ```
 
 # Database considerations
-* I am going to use SQLITE. Most linux machines come pre-installed with sqllite. SQLite's main drawback is that it can't do concurrent writes and only runs on one machine, but that is acceptable for this project.
+* I chose to use SQLITE. Most linux machines come pre-installed with sqllite. SQLite's main drawback is that it can't do concurrent writes and only runs on one machine, but that is acceptable for this project.
 * For a more capable database in the future, maybe MySQL or Postgres: http://stackoverflow.com/questions/4813890/sqlite-or-mysql-how-to-decide
 * Postgres is more SQL standard adhereing than MySQL, more capable that sqlite.
 * SQL databases are easier/smaller memory requirements than Neo4j or Casandra.
@@ -110,17 +109,16 @@ Drawbacks to this approach:
 Pros:
 * Perhaps shorter runtime to perform perform_infection
 
-For this coding challenege, using an actual database seems to be a more realistic approach.
+For this coding challenege, using an actual database seemed to be a more realistic approach, therefore this alternative approach of using code was not implemented
 
 
 
 ## Testing
-Didn't have time for unit testing or integrated testing. Instead, I developed a web UI, that was used for visual inspection, as beta testing.
+I did not get a chance to implment unit testing or integrated testing. Instead, I developed a web UI that was used for visual inspection, which could be thought of as a form of beta testing.
 
-## Optimizations and updates that could have been made:
-Could have done a recursive query instead of the wierd thing I did that mixed python and sql
+## Areas that could use more consideration
+I could have done a recursive query instead of the wierd thing I did that mixed python and sql
 
-## Potential questions that could use more consideration
 What are some other SQL queries that I can run?
 
 How do you check if two users are in the same course?
@@ -140,7 +138,7 @@ After creating an Index, SQL lite will do 2 binary searches.
 First one on the indexed column, eg to get username to rowID,
 then a second search to find that rowID
 
-## Primary key vs index:=
+## Primary key vs index
 - Need to have one primary key (primary key = for uniqueness)
 - Can have many indexes (index= for uniqueness and for performance)
 http://stackoverflow.com/questions/2878272/when-i-should-use-primary-key-or-index
