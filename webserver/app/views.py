@@ -161,9 +161,10 @@ def perform_infection():
     if infection_type=='LIMITED':
         '''
         Infects all users that have the same teacher as this user:
-            1. Query to get all class mates of target user, for every class the target user is in
+            1. Query to find all other users who have the same teacher as the target user. Do so for every class the target user is in
             2. Infect all of these classmates
         This subquery should be O(N*K). O(N) for the inner subquery which might yield K results, then again for each entry loops through to see if exists in the K results, so O(N*K). This totals to O(N*K+N)
+        Note that if we infect a user who is both a teacher of a class as well as a student in another class, then all of that user's students will be infected, as well as all of that user's classmates
         '''
         subquery=( 
             'select student_id as user_id from '
@@ -188,9 +189,10 @@ def perform_infection():
     elif infection_type=='TOTAL':
         '''
         Infects all the users in the same courses, then repeat for those users:
-            1. Query to get all class mates of target user that don't have the same version, for every class the target user is in
-            2. Infect all of these classmates
-            3. repeat steps 1 and 2 for each of these classmates until the query in step 1 returns empty
+            1. Query to find all other users who have the same teacher as the target user. Do so for every class the target user is in.
+                Add the users into a set
+            2. Infect all of these users
+            3. Repeat steps 1 and 2 for each of these in the set
         '''
         users_to_infect=set()
         users_to_infect.add(user_id_to_infect)
@@ -213,8 +215,11 @@ def perform_infection():
             )
             print("subquery: ",subquery)
             more_users=g.db.execute(subquery+';').fetchall()
+            '''
+            This is the breadth-first part where we add all "classmates" into the find all their correspond classmates
+            '''
             for new_user_to_add in more_users:
-                users_to_infect.add(new_user_to_add[0]) #new_user_to_add is of the form (user_id,)  - has a comma at the end for some reason
+                users_to_infect.add(new_user_to_add[0]) #new_user_to_add is of the form (user_id,)  - has a comma at the end, so get element 0 for the user_id
             statement=(
                 'update users set version='+infection_version+' '
                 'where user_id in '
