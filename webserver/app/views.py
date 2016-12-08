@@ -31,18 +31,18 @@ def view_database():
 
 def count_infection_versions():
     """
-    Helper function response to an AJAX call to query the data and return to front end
+    Helper function to query the data and put the results in a python dict for returning to the front end
     """
     total_num_users = g.db.execute("SELECT count(*) FROM USERS;").fetchall() #Expected runtime O(N) or O(1)
     num_of_distinct_versions = g.db.execute("SELECT count(distinct(version)) FROM users").fetchall()[0][0] # O(N)
-    list_of_versions = [version_item[0] for version_item in g.db.execute("SELECT distinct(version) FROM users").fetchall()] #because the query returns with: [(1.1,), (1,)]. O(N)
+    list_of_versions = [version_item[0] for version_item in g.db.execute("SELECT distinct(version) FROM users").fetchall()] #Runtime: O(N). Note the query returns with format: [(version,), (1.1,), (1,)].
     random_users = g.db.execute("SELECT * FROM USERS ORDER BY RANDOM() LIMIT 5;").fetchall() # O(1), gets 5 random users
-    all_users = g.db.execute("SELECT user_id, version FROM USERS;").fetchall() #O(1) runtime?
+    all_users = g.db.execute("SELECT user_id, version FROM USERS;").fetchall() #O(N)?
     nodes=[{'id': item[0], 'group':item[1]} for item in all_users]
-    all_relationships = g.db.execute("SELECT * FROM RELATIONSHIPS;").fetchall()
+    all_relationships = g.db.execute("SELECT * FROM RELATIONSHIPS;").fetchall() #O(N)
     links=[{"source":item[0], "target":item[1],"value":1} for item in all_relationships]
     users_per_version=[]
-    for version in list_of_versions: #O(N*N) total depending on how many versions there are
+    for version in list_of_versions: #This loop is O(N*K) total. Where K is number of versions (max of N)
         users_per_version.append(g.db.execute("SELECT count(*) FROM users where version="+str(version)).fetchall()[0][0]) #this is O(N) because I don't have index.
     versions_info={"nodes":nodes,"links":links,"total_num_users":total_num_users,"num_of_distinct_versions":num_of_distinct_versions, "list_of_versions":list_of_versions, "users_per_version":users_per_version, "random_users":random_users}
     return versions_info
@@ -65,89 +65,6 @@ def delete_all_entries_from_db():
     return jsonify(count_infection_versions())
 
 
-@app.route('/_perform_infection')
-def perform_infection():
-    """
-    Called via AJAX from the client side
-    Performs a "limited infection"
-    Input: AJAX input 
-    infection_type can be one of two options:
-    SAME_COURSES_ONLY: only infects everyone that is in the same course as the user.
-    ALL_RELATIONS_RECUR: infects every course mate of the user (i.e. everyone that is in the same course as the user), and then does the same thing for each course mate, until they all have been infected
-    # 1. query to get all class mates of target user, for every class the target user is in
-    # 2. infect all of these classmates
-    # 3. repeat step 1 for each of these classmates
-    """        
-    infection_version=request.args.get('infection_version', 0, type=str)
-    user_id_to_infect=request.args.get('user_id_to_infect', 0, type=str)
-    infection_type=request.args.get('infection_type', 0, type=str)
-    print("infection_version:", infection_version)
-    print("user_id_to_infect:", user_id_to_infect)
-    print("infection_type:", infection_type)
-    #
-    if infection_type=='LIMITED': #this loop is most likely O(N^2), or O(NlogN) to go through an indexed version of this
-        #get all classes that this user is in
-        subquery=( 
-            'select student_id as user_id from '
-                'RELATIONSHIPS '
-                'where teacher_id=' +user_id_to_infect+ ' '
-                'or teacher_id in '
-                '(select teacher_id from '
-                    'RELATIONSHIPS where student_id='+user_id_to_infect+') '
-            'UNION '
-            'select teacher_id as user_id from '
-                'RELATIONSHIPS where student_id='+user_id_to_infect+' '
-        )
-        print("subquery: ",subquery)
-        statement=(
-            'update users set version='+infection_version+' '
-                'where user_id='+user_id_to_infect+' '
-                'or user_id in '
-                 +'('+subquery+');'
-        )             
-        execute_statement(statement)
-    # this gets all the users in the same courses as user_id_to_infect and infect them, then repeat for those users
-    elif infection_type=='TOTAL':
-        users_to_infect=set()
-        users_to_infect.add(user_id_to_infect)
-        while users_to_infect: #This whole loop is O(N^2 log N)
-            user_id_to_infect_in_loop=str(users_to_infect.pop())
-            print("user_id_to_infect_in_loop: ", user_id_to_infect_in_loop)
-            subquery=( 
-                'select u1.user_id from '
-                    '(select r1.student_id as user_id from '
-                        'RELATIONSHIPS r1 '
-                        'where r1.teacher_id=' +user_id_to_infect_in_loop+ ' '
-                        'or r1.teacher_id in '
-                        '(select teacher_id from '
-                            'RELATIONSHIPS where student_id='+user_id_to_infect_in_loop+') '
-                    'UNION '
-                    'select teacher_id as user_id from '
-                        'RELATIONSHIPS where student_id='+user_id_to_infect_in_loop+') as q1 '
-                'join users u1 '
-                    'on u1.user_id=q1.user_id '
-                    'where u1.version<>'+infection_version+' '
-            )
-            print("subquery: ",subquery)
-            # 1. query to get all classmates
-            more_users=g.db.execute(subquery+';').fetchall()
-            print("more_users: ", more_users)
-            # pdb.set_trace()
-            for new_user_to_add in more_users:
-                # 3. repeating step 1 for each of these classmates
-                users_to_infect.add(new_user_to_add[0]) #new_user_to_add is of the form (user_id,)  - has a comma at the end for some reason
-            statement=(
-                'update users set version='+infection_version+' '
-                'where user_id in '
-                 +'('+subquery+');'
-            )
-            print("statement: ", statement)
-            # 2. infect all of these classmates
-            execute_statement(statement)
-    return jsonify(count_infection_versions())
-
-
-
 
 @app.route('/_populate_database')
 def populate_database():
@@ -168,7 +85,7 @@ def populate_database():
     count=0
     cur = g.db.cursor()
     new_users=set()
-    #1. create users
+    #1. create users. This loop is O(N) runtime, where N = number of users to create, assuming an un-indexed insert
     while count < num_users_to_create:
         userName=random.choice(string.ascii_letters[26::])+random.choice(['a','e','i','o','u','y'])+random.choice(string.ascii_letters[0:26])+random.choice(string.ascii_letters[0:26])+random.choice(['a','e','i','o','u','y'])
         statement = make_insert_statement("USERS", ['name','version'], [userName,version_number])
@@ -190,7 +107,12 @@ def populate_database():
 
     #3. Generate the desired number of teacher-to-student relationships, insert into RELATIONSHIPS table (each user that is not a teacher gets assigned to a teacher) for the first pass    
     cur = g.db.cursor()
-    pdb.set_trace()
+    '''
+    This while loop does the following:
+    -Runs while there are more teacher-to-student relationships to be made
+        -For each teacher, evenly assign a random number of students out of a sample set of users, without replacement
+        -Once the sample set is used up, while there are more teacher-to-student relationships to be made, replenish it
+    '''
     while num_teacher_student_relationships_to_make>0:
         for i,teacher in enumerate(teachers):
             if i+1==len(teachers):             
@@ -206,8 +128,9 @@ def populate_database():
                     cur.execute(statement, [teacher,student]) #the execute statement needs to have the values there
                 except:
                     print("tried to insert a duplicate, ignored")
-        #Resample and perform more teacher-to-stduent assignments if there are more teacher-to-student relationships than there are (num_users_to_create minus num_teachers)
-        num_teacher_student_relationships_to_make-=num_students_to_add
+        #Resample and perform more teacher-to-student assignments if there are more teacher-to-student relationships to be made
+        #Rhis section of code is placed at the end of the while loop instead of the begining so that the first run of the loop will ensure only non-teachers are assigned to teachers without placement. Further loops allow any user to be assigned as a student
+        num_teacher_student_relationships_to_make-=num_students_to_add 
         if num_teacher_student_relationships_to_make>num_users_to_create-num_teachers:
             num_students_to_add=num_users_to_create-num_teachers
         else:
@@ -216,6 +139,90 @@ def populate_database():
         g.db.commit()
     cur.close()
     return jsonify(count_infection_versions())
+
+
+@app.route('/_perform_infection')
+def perform_infection():
+    """
+    Called via AJAX from the client side
+    Input: AJAX input 
+    Infection_type can be one of two options:
+    LIMITED: Infects everyone that has the same teacher as the user, which is done by querying who the user's teachers are, and infecting the students of all those teachers. 
+             If the target user is a teacher, only that teacher's students are infected.
+    TOTAL: Infects everyone that has the same teacher as the user, and then does the same thing for each course mate until they all have been infected. Done so in a breath first manner by appending to a set.
+    """        
+    infection_version=request.args.get('infection_version', 0, type=str)
+    user_id_to_infect=request.args.get('user_id_to_infect', 0, type=str)
+    infection_type=request.args.get('infection_type', 0, type=str)
+    print("infection_version:", infection_version)
+    print("user_id_to_infect:", user_id_to_infect)
+    print("infection_type:", infection_type)
+    #
+    if infection_type=='LIMITED':
+        '''
+        Infects all users that have the same teacher as this user:
+            1. Query to get all class mates of target user, for every class the target user is in
+            2. Infect all of these classmates
+        This subquery should be O(N*K). O(N) for the inner subquery which might yield K results, then again for each entry loops through to see if exists in the K results, so O(N*K). This totals to O(N*K+N)
+        '''
+        subquery=( 
+            'select student_id as user_id from '
+                'RELATIONSHIPS '
+                'where teacher_id=' +user_id_to_infect+ ' '
+                'or teacher_id in '
+                '(select teacher_id from '
+                    'RELATIONSHIPS where student_id='+user_id_to_infect+') '
+            'UNION '
+            'select teacher_id as user_id from '
+                'RELATIONSHIPS where student_id='+user_id_to_infect+' '
+        )
+        print("subquery: ",subquery)
+        #This statement should be O(N*K) runtime, where K is the size of the result of the subquery
+        statement=( 
+            'update users set version='+infection_version+' '
+                'where user_id='+user_id_to_infect+' '
+                'or user_id in '
+                 +'('+subquery+');'
+        )             
+        execute_statement(statement)
+    elif infection_type=='TOTAL':
+        '''
+        Infects all the users in the same courses, then repeat for those users:
+            1. Query to get all class mates of target user that don't have the same version, for every class the target user is in
+            2. Infect all of these classmates
+            3. repeat steps 1 and 2 for each of these classmates until the query in step 1 returns empty
+        '''
+        users_to_infect=set()
+        users_to_infect.add(user_id_to_infect)
+        while users_to_infect:
+            user_id_to_infect_in_loop=str(users_to_infect.pop())
+            subquery=( 
+                'select u1.user_id from '
+                    '(select r1.student_id as user_id from '
+                        'RELATIONSHIPS r1 '
+                        'where r1.teacher_id=' +user_id_to_infect_in_loop+ ' '
+                        'or r1.teacher_id in '
+                        '(select teacher_id from '
+                            'RELATIONSHIPS where student_id='+user_id_to_infect_in_loop+') '
+                    'UNION '
+                    'select teacher_id as user_id from '
+                        'RELATIONSHIPS where student_id='+user_id_to_infect_in_loop+') as q1 '
+                'join users u1 '
+                    'on u1.user_id=q1.user_id '
+                    'where u1.version<>'+infection_version+' '
+            )
+            print("subquery: ",subquery)
+            more_users=g.db.execute(subquery+';').fetchall()
+            for new_user_to_add in more_users:
+                users_to_infect.add(new_user_to_add[0]) #new_user_to_add is of the form (user_id,)  - has a comma at the end for some reason
+            statement=(
+                'update users set version='+infection_version+' '
+                'where user_id in '
+                 +'('+subquery+');'
+            )
+            execute_statement(statement)
+    return jsonify(count_infection_versions())
+
 
 
 def execute_statement(statement):
@@ -246,6 +253,7 @@ def make_insert_statement(table, fields=(), values=()):
 def before_request():
     print("before_request ran")
     g.db = sqlite3.connect(DATABASE)
+
 
 @app.teardown_request
 def teardown_request(exception):
