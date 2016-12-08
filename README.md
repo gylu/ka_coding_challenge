@@ -1,7 +1,8 @@
 # Khan Academy Coding Challenge
 
+<kbd>
 ![Alt text](screenshot.png?raw=true "Pipeline")
-
+</kbd>
 # How to run
 1. Clone or download all contents of this repo, including the .db file
 2. Navigate to ```khan_coding_challenge/webserver ```
