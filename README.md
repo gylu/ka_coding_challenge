@@ -1,5 +1,6 @@
 # Khan Academy Coding Challenge
 
+![Alt text](screenshot.png?raw=true "Pipeline")
 
 # How to run
 1. Clone or download all contents of this repo, including the .db file
