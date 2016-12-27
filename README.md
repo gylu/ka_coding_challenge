@@ -124,7 +124,7 @@ What are some other SQL queries that I can run?
 How do you check if two users are in the same course?
 
 
-# Notes on SQLITE indicies and run times
+# Notes on SQLITE indexes and run times
 ## SQLITE indexes:
 https://www.tutorialspoint.com/sqlite/sqlite_indexes.htm
 

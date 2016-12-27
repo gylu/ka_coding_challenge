@@ -176,12 +176,12 @@ def perform_infection():
             'UNION '
             'select teacher_id as user_id from '
                 'RELATIONSHIPS where student_id='+user_id_to_infect+' '
-        )
+        ) #the union includes the teacher when the target is a student_id used to find all classmates
         print("subquery: ",subquery)
         #This statement should be O(N*K) runtime, where K is the size of the result of the subquery
         statement=( 
             'update users set version='+infection_version+' '
-                'where user_id='+user_id_to_infect+' '
+                'where user_id='+user_id_to_infect+' ' #this line infects the teacher in case it was the teacher who was the target user. In total infection, this line isn't needed because the iteration moves to work on the students, which will add the teacher
                 'or user_id in '
                  +'('+subquery+');'
         )             
