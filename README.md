@@ -124,6 +124,8 @@ What are some other SQL queries that I can run?
 How do you check if two users are in the same course?
 
 
+
+
 # Notes on SQLITE indexes and run times
 ## SQLITE indexes:
 https://www.tutorialspoint.com/sqlite/sqlite_indexes.htm
@@ -152,3 +154,25 @@ http://stackoverflow.com/questions/2065754/is-there-any-general-rule-on-sql-quer
 ## Tutorials followed:
 http://opentechschool.github.io/python-flask/extras/databases.html
 
+
+# Hindsight and feedback from a good friend about areas I need improvement and perhaps why my implementation ultimately did not get me an interview
+
+## Didn't use a DAO or ORM
+This caused my code to not be object oriented at all. Object oriented-ness would have provided more encapsulation and future-proof-ness. E.g. the ability to add more methods and properties to classes.
+DAOs or ORMs allow you to access your database rows in terms of objects and not just sql statements acting on database rows. I had my front end directly access my sql database. DAOs and ORMs also provide the flexiblity in allowing you to store some of the data in the RAM layer, and potentially do something with it (e.g. something like memcache)
+Using DAOs and ORMs provide flexiblity, e.g. it'll allow you to swap out the database, and you won't have to re-write everything.
+
+The fix would have been for my views.py to accessed objects (e.g. user objects, relationship objects), where each object is a row in a database, with there being an object class and methods.
+
+## Lack of code structuring
+I didn't use classes or functions or structures. This again makes the code difficult to read, understand, and update
+
+(For future reading: http://docs.python-guide.org/en/latest/writing/structure/)
+
+## Didn't show how I'd programatically implement business knowledge
+My garble of sql with python code due directly manipulating the database means business logic and UI code were all jumbled together, which led to difficulty in understanding
+
+
+## How to get better at the above:
+### Read a lot of other people's code
+### Work for a company, and that'll force you to read a lot of other people's code
